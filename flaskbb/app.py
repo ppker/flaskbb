@@ -13,8 +13,8 @@ import logging.config
 import os
 import sys
 import time
+import warnings
 from datetime import datetime
-from functools import partial
 
 from flask import Flask, request
 from flask_login import current_user
@@ -23,41 +23,83 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.exc import OperationalError, ProgrammingError
 
 from flaskbb._compat import iteritems, string_types
+
 # extensions
-from flaskbb.extensions import (alembic, allows, babel, cache, celery, csrf,
-                                db, debugtoolbar, limiter, login_manager, mail,
-                                redis_store, themes, whooshee)
+from flaskbb.extensions import (
+    alembic,
+    allows,
+    babel,
+    cache,
+    celery,
+    csrf,
+    db,
+    debugtoolbar,
+    limiter,
+    login_manager,
+    mail,
+    redis_store,
+    themes,
+    whooshee,
+)
 from flaskbb.plugins import spec
 from flaskbb.plugins.manager import FlaskBBPluginManager
 from flaskbb.plugins.models import PluginRegistry
 from flaskbb.plugins.utils import remove_zombie_plugins_from_db, template_hook
+
 # models
 from flaskbb.user.models import Guest, User
+
 # various helpers
-from flaskbb.utils.helpers import (app_config_from_env, crop_title,
-                                   format_date, forum_is_unread,
-                                   get_alembic_locations, get_flaskbb_config,
-                                   is_online, mark_online,
-                                   render_template, time_since, time_utcnow,
-                                   topic_is_unread)
+from flaskbb.utils.helpers import (
+    app_config_from_env,
+    crop_title,
+    format_date,
+    format_datetime,
+    forum_is_unread,
+    get_alembic_locations,
+    get_flaskbb_config,
+    is_online,
+    mark_online,
+    render_template,
+    time_since,
+    time_utcnow,
+    topic_is_unread,
+)
+
 # permission checks (here they are used for the jinja filters)
-from flaskbb.utils.requirements import (CanBanUser, CanEditUser, IsAdmin,
-                                        IsAtleastModerator, TplCanDeletePost,
-                                        TplCanDeleteTopic, TplCanEditPost,
-                                        TplCanModerate, TplCanPostReply,
-                                        TplCanPostTopic)
+from flaskbb.utils.requirements import (
+    CanBanUser,
+    CanEditUser,
+    IsAdmin,
+    IsAtleastModerator,
+    can_delete_topic,
+    can_edit_post,
+    can_moderate,
+    can_post_reply,
+    can_post_topic,
+    has_permission,
+    permission_with_identity,
+)
+
 # whooshees
-from flaskbb.utils.search import (ForumWhoosheer, PostWhoosheer,
-                                  TopicWhoosheer, UserWhoosheer)
+from flaskbb.utils.search import (
+    ForumWhoosheer,
+    PostWhoosheer,
+    TopicWhoosheer,
+    UserWhoosheer,
+)
+
 # app specific configurations
 from flaskbb.utils.settings import flaskbb_config
 from flaskbb.utils.translations import FlaskBBDomain
 
-from . import markup
-from .auth import views as auth_views
-from .forum import views as forum_views
-from .management import views as management_views
-from .user import views as user_views
+from . import markup  # noqa
+from .auth import views as auth_views  # noqa
+from .deprecation import FlaskBBDeprecation
+from .forum import views as forum_views  # noqa
+from .management import views as management_views  # noqa
+from .user import views as user_views  # noqa
+from .display.navigation import NavigationContentType
 
 logger = logging.getLogger(__name__)
 
@@ -96,7 +138,6 @@ def create_app(config=None, instance_path=None):
     configure_errorhandlers(app)
     configure_migrations(app)
     configure_translations(app)
-
     app.pluggy.hook.flaskbb_additional_setup(app=app, pluggy=app.pluggy)
 
     return app
@@ -105,7 +146,7 @@ def create_app(config=None, instance_path=None):
 def configure_app(app, config):
     """Configures FlaskBB."""
     # Use the default config and override it afterwards
-    app.config.from_object('flaskbb.configs.default.DefaultConfig')
+    app.config.from_object("flaskbb.configs.default.DefaultConfig")
     config = get_flaskbb_config(app, config)
     # Path
     if isinstance(config, string_types):
@@ -136,12 +177,34 @@ def configure_app(app, config):
 
     logger.info("Using config from: {}".format(config_name))
 
-    app.pluggy = FlaskBBPluginManager('flaskbb', implprefix='flaskbb_')
+    deprecation_level = app.config.get("DEPRECATION_LEVEL", "default")
+
+    # never set the deprecation level during testing, pytest will handle it
+    if not app.testing:  # pragma: no branch
+        warnings.simplefilter(deprecation_level, FlaskBBDeprecation)
+
+    debug_panels = app.config.setdefault('DEBUG_TB_PANELS', [
+        'flask_debugtoolbar.panels.versions.VersionDebugPanel',
+        'flask_debugtoolbar.panels.timer.TimerDebugPanel',
+        'flask_debugtoolbar.panels.headers.HeaderDebugPanel',
+        'flask_debugtoolbar.panels.request_vars.RequestVarsDebugPanel',
+        'flask_debugtoolbar.panels.config_vars.ConfigVarsDebugPanel',
+        'flask_debugtoolbar.panels.template.TemplateDebugPanel',
+        'flask_debugtoolbar.panels.sqlalchemy.SQLAlchemyDebugPanel',
+        'flask_debugtoolbar.panels.logger.LoggingPanel',
+        'flask_debugtoolbar.panels.route_list.RouteListDebugPanel',
+        'flask_debugtoolbar.panels.profiler.ProfilerDebugPanel',
+    ])
+
+    if all('WarningsPanel' not in p for p in debug_panels):
+        debug_panels.append('flask_debugtoolbar_warnings.WarningsPanel')
+
+    app.pluggy = FlaskBBPluginManager("flaskbb", implprefix="flaskbb_")
 
 
 def configure_celery_app(app, celery):
     """Configures the celery app."""
-    app.config.update({'BROKER_URL': app.config["CELERY_BROKER_URL"]})
+    app.config.update({"BROKER_URL": app.config["CELERY_BROKER_URL"]})
     celery.conf.update(app.config)
 
     TaskBase = celery.Task
@@ -161,6 +224,9 @@ def configure_blueprints(app):
 
 def configure_extensions(app):
     """Configures the extensions."""
+    # Flask-Allows
+    allows.init_app(app)
+    allows.identity_loader(lambda: current_user)
 
     # Flask-WTF CSRF
     csrf.init_app(app)
@@ -202,8 +268,9 @@ def configure_extensions(app):
     login_manager.login_view = app.config["LOGIN_VIEW"]
     login_manager.refresh_view = app.config["REAUTH_VIEW"]
     login_manager.login_message_category = app.config["LOGIN_MESSAGE_CATEGORY"]
-    login_manager.needs_refresh_message_category = \
-        app.config["REFRESH_MESSAGE_CATEGORY"]
+    login_manager.needs_refresh_message_category = app.config[
+        "REFRESH_MESSAGE_CATEGORY"
+    ]
     login_manager.anonymous_user = Guest
 
     @login_manager.user_loader
@@ -217,45 +284,44 @@ def configure_extensions(app):
 
     login_manager.init_app(app)
 
-    # Flask-Allows
-    allows.init_app(app)
-    allows.identity_loader(lambda: current_user)
-
 
 def configure_template_filters(app):
     """Configures the template filters."""
     filters = {}
 
-    filters['format_date'] = format_date
-    filters['time_since'] = time_since
-    filters['is_online'] = is_online
-    filters['crop_title'] = crop_title
-    filters['forum_is_unread'] = forum_is_unread
-    filters['topic_is_unread'] = topic_is_unread
+    filters["crop_title"] = crop_title
+    filters["format_date"] = format_date
+    filters["format_datetime"] = format_datetime
+    filters["forum_is_unread"] = forum_is_unread
+    filters["is_online"] = is_online
+    filters["time_since"] = time_since
+    filters["topic_is_unread"] = topic_is_unread
 
     permissions = [
-        ('is_admin', IsAdmin),
-        ('is_moderator', IsAtleastModerator),
-        ('is_admin_or_moderator', IsAtleastModerator),
-        ('can_edit_user', CanEditUser),
-        ('can_ban_user', CanBanUser),
+        ("is_admin", IsAdmin),
+        ("is_moderator", IsAtleastModerator),
+        ("is_admin_or_moderator", IsAtleastModerator),
+        ("can_edit_user", CanEditUser),
+        ("can_ban_user", CanBanUser),
     ]
 
     filters.update(
-        [(name, partial(perm, request=request)) for name, perm in permissions]
+        (name, permission_with_identity(perm, name=name))
+        for name, perm in permissions
     )
 
-    # these create closures
-    filters['can_moderate'] = TplCanModerate(request)
-    filters['post_reply'] = TplCanPostReply(request)
-    filters['edit_post'] = TplCanEditPost(request)
-    filters['delete_post'] = TplCanDeletePost(request)
-    filters['post_topic'] = TplCanPostTopic(request)
-    filters['delete_topic'] = TplCanDeleteTopic(request)
+    filters["can_moderate"] = can_moderate
+    filters["post_reply"] = can_post_reply
+    filters["edit_post"] = can_edit_post
+    filters["delete_post"] = can_edit_post
+    filters["post_topic"] = can_post_topic
+    filters["delete_topic"] = can_delete_topic
+    filters["has_permission"] = has_permission
 
     app.jinja_env.filters.update(filters)
 
     app.jinja_env.globals["run_hook"] = template_hook
+    app.jinja_env.globals["NavigationContentType"] = NavigationContentType
 
     app.pluggy.hook.flaskbb_jinja_directives(app=app)
 
@@ -323,7 +389,7 @@ def configure_migrations(app):
     plugin_dirs = app.pluggy.hook.flaskbb_load_migrations()
     version_locations = get_alembic_locations(plugin_dirs)
 
-    app.config['ALEMBIC']['version_locations'] = version_locations
+    app.config["ALEMBIC"]["version_locations"] = version_locations
 
 
 def configure_translations(app):
@@ -336,8 +402,11 @@ def configure_translations(app):
     @babel.localeselector
     def get_locale():
         # if a user is logged in, use the locale from the user settings
-        if current_user and \
-                current_user.is_authenticated and current_user.language:
+        if (
+            current_user
+            and current_user.is_authenticated
+            and current_user.language
+        ):
             return current_user.language
         # otherwise we will just fallback to the default language
         return flaskbb_config["DEFAULT_LANGUAGE"]
@@ -345,27 +414,27 @@ def configure_translations(app):
 
 def configure_logging(app):
     """Configures logging."""
-    if app.config.get('USE_DEFAULT_LOGGING'):
+    if app.config.get("USE_DEFAULT_LOGGING"):
         configure_default_logging(app)
 
-    if app.config.get('LOG_CONF_FILE'):
+    if app.config.get("LOG_CONF_FILE"):
         logging.config.fileConfig(
-            app.config['LOG_CONF_FILE'], disable_existing_loggers=False
+            app.config["LOG_CONF_FILE"], disable_existing_loggers=False
         )
 
     if app.config["SQLALCHEMY_ECHO"]:
         # Ref: http://stackoverflow.com/a/8428546
         @event.listens_for(Engine, "before_cursor_execute")
         def before_cursor_execute(
-                conn, cursor, statement, parameters, context, executemany
+            conn, cursor, statement, parameters, context, executemany
         ):
-            conn.info.setdefault('query_start_time', []).append(time.time())
+            conn.info.setdefault("query_start_time", []).append(time.time())
 
         @event.listens_for(Engine, "after_cursor_execute")
         def after_cursor_execute(
-                conn, cursor, statement, parameters, context, executemany
+            conn, cursor, statement, parameters, context, executemany
         ):
-            total = time.time() - conn.info['query_start_time'].pop(-1)
+            total = time.time() - conn.info["query_start_time"].pop(-1)
             app.logger.debug("Total Time: %f", total)
 
 
@@ -379,13 +448,16 @@ def configure_default_logging(app):
 
 def configure_mail_logs(app, formatter):
     from logging.handlers import SMTPHandler
+
     formatter = logging.Formatter(
         "%(asctime)s %(levelname)-7s %(name)-25s %(message)s"
     )
     mail_handler = SMTPHandler(
-        app.config['MAIL_SERVER'], app.config['MAIL_DEFAULT_SENDER'],
-        app.config['ADMINS'], 'application error, no admins specified',
-        (app.config['MAIL_USERNAME'], app.config['MAIL_PASSWORD'])
+        app.config["MAIL_SERVER"],
+        app.config["MAIL_DEFAULT_SENDER"],
+        app.config["ADMINS"],
+        "application error, no admins specified",
+        (app.config["MAIL_USERNAME"], app.config["MAIL_PASSWORD"]),
     )
 
     mail_handler.setLevel(logging.ERROR)
@@ -402,8 +474,9 @@ def load_plugins(app):
     # we are not interested in duplicated plugins or invalid ones
     # ('None' - appears on py2) and thus using a set
     flaskbb_modules = set(
-        module for name, module in iteritems(sys.modules)
-        if name.startswith('flaskbb')
+        module
+        for name, module in iteritems(sys.modules)
+        if name.startswith("flaskbb")
     )
     for module in flaskbb_modules:
         app.pluggy.register(module, internal=True)
@@ -414,21 +487,20 @@ def load_plugins(app):
 
     except (OperationalError, ProgrammingError) as exc:
         logger.debug(
-            "Database is not setup correctly or has not been "
-            "setup yet.",
-            exc_info=exc
+            "Database is not setup correctly or has not been " "setup yet.",
+            exc_info=exc,
         )
         # load plugins even though the database isn't setup correctly
         # i.e. when creating the initial database and wanting to install
         # the plugins migration as well
-        app.pluggy.load_setuptools_entrypoints('flaskbb_plugins')
+        app.pluggy.load_setuptools_entrypoints("flaskbb_plugins")
         return
 
     for plugin in plugins:
         if not plugin.enabled:
             app.pluggy.set_blocked(plugin.name)
 
-    app.pluggy.load_setuptools_entrypoints('flaskbb_plugins')
+    app.pluggy.load_setuptools_entrypoints("flaskbb_plugins")
     app.pluggy.hook.flaskbb_extensions(app=app)
 
     loaded_names = set([p[0] for p in app.pluggy.list_name_plugin()])
@@ -437,7 +509,7 @@ def load_plugins(app):
         PluginRegistry(name=name)
         for name in loaded_names - registered_names
         # ignore internal FlaskBB modules
-        if not name.startswith('flaskbb.') and name != 'flaskbb'
+        if not name.startswith("flaskbb.") and name != "flaskbb"
     ]
     with app.app_context():
         db.session.add_all(unregistered)

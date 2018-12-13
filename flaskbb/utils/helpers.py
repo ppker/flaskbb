@@ -12,6 +12,7 @@ import ast
 import itertools
 import logging
 import operator
+import warnings
 import os
 import re
 import time
@@ -24,7 +25,10 @@ from pkg_resources import get_distribution
 import requests
 import unidecode
 from babel.core import get_locale_identifier
-from babel.dates import format_timedelta as babel_format_timedelta
+from babel.dates import (
+    format_timedelta as babel_format_timedelta,
+    format_datetime as babel_format_datetime,
+    format_date as babel_format_date)
 from werkzeug.utils import import_string, ImportStringError
 from flask import flash, g, redirect, request, session, url_for
 from flask_allows import Permission
@@ -88,7 +92,8 @@ def render_template(template, **context):  # pragma: no cover
     return render_theme_template(theme, template, **context)
 
 
-def do_topic_action(topics, user, action, reverse):
+# TODO(anr): clean this up
+def do_topic_action(topics, user, action, reverse):  # noqa: C901
     """Executes a specific action for topics. Returns a list with the modified
     topic objects.
 
@@ -106,8 +111,10 @@ def do_topic_action(topics, user, action, reverse):
                                             CanDeleteTopic, Has)
 
     if not Permission(IsAtleastModeratorInForum(forum=topics[0].forum)):
-        flash(_("You do not have the permissions to execute this "
-                "action."), "danger")
+        flash(
+            _("You do not have the permissions to execute this action."),
+            "danger"
+        )
         return False
 
     modified_topics = 0
@@ -122,7 +129,10 @@ def do_topic_action(topics, user, action, reverse):
 
     elif action == "delete":
         if not Permission(CanDeleteTopic):
-            flash(_("You do not have the permissions to delete these topics."), "danger")
+            flash(
+                _("You do not have the permissions to delete these topics."),
+                "danger"
+            )
             return False
 
         for topic in topics:
@@ -131,7 +141,10 @@ def do_topic_action(topics, user, action, reverse):
 
     elif action == 'hide':
         if not Permission(Has('makehidden')):
-            flash(_("You do not have the permissions to hide these topics."), "danger")
+            flash(
+                _("You do not have the permissions to hide these topics."),
+                "danger"
+            )
             return False
 
         for topic in topics:
@@ -142,7 +155,10 @@ def do_topic_action(topics, user, action, reverse):
 
     elif action == 'unhide':
         if not Permission(Has('makehidden')):
-            flash(_("You do not have the permissions to unhide these topics."), "danger")
+            flash(
+                _("You do not have the permissions to unhide these topics."),
+                "danger"
+            )
             return False
 
         for topic in topics:
@@ -399,26 +415,68 @@ def time_diff():
     return diff
 
 
-def format_date(value, format='%Y-%m-%d'):
-    """Returns a formatted time string
+def _get_user_locale():
+    locale = flaskbb_config.get("DEFAULT_LANGUAGE", "en")
+    if current_user.is_authenticated and current_user.language is not None:
+        locale = current_user.language
+    return locale
+
+
+def _format_html_time_tag(datetime, what_to_display):
+    if what_to_display == 'date-only':
+        content = babel_format_date(datetime, locale=_get_user_locale())
+    elif what_to_display == 'date-and-time':
+        content = babel_format_datetime(
+            datetime,
+            tzinfo=UTC,
+            locale=_get_user_locale()
+        )
+        # While this could be done with a format string, that would
+        # hinder internationalization and honestly why bother.
+        content += ' UTC'
+    else:
+        raise ValueError('what_to_display argument invalid')
+
+    isoformat = datetime.isoformat()
+
+    return Markup(
+        '<time datetime="{}" data-what_to_display="{}">{}</time>'
+        .format(isoformat, what_to_display, content)
+    )
+
+
+def format_datetime(datetime):
+    """Format the datetime for usage in templates.
 
     :param value: The datetime object that should be formatted
-
-    :param format: How the result should look like. A full list of available
-                   directives is here: http://goo.gl/gNxMHE
+    :rtype: Markup
     """
-    return value.strftime(format)
+    return _format_html_time_tag(datetime, 'date-and-time')
+
+
+def format_date(datetime, format=None):
+    """Format the datetime for usage in templates, keeping only the date.
+
+    :param value: The datetime object that should be formatted
+    :rtype: Markup
+    """
+    if format:
+        warnings.warn(
+            'This API has been deprecated due to i18n concerns.  Please use  '
+            'Jinja filters format_datetime and format_date without arguments '
+            'to format complete and date-only timestamps respectively.',
+            DeprecationWarning
+        )
+        if '%H' in format:
+            return format_datetime(datetime)
+    return _format_html_time_tag(datetime, 'date-only')
 
 
 def format_timedelta(delta, **kwargs):
     """Wrapper around babel's format_timedelta to make it user language
     aware.
     """
-    locale = flaskbb_config.get("DEFAULT_LANGUAGE", "en")
-    if current_user.is_authenticated and current_user.language is not None:
-        locale = current_user.language
-
-    return babel_format_timedelta(delta, locale=locale, **kwargs)
+    return babel_format_timedelta(delta, locale=_get_user_locale(), **kwargs)
 
 
 def time_since(time):  # pragma: no cover
@@ -759,3 +817,24 @@ def requires_unactivated(f):
 def register_view(bp_or_app, routes, view_func, *args, **kwargs):
     for route in routes:
         bp_or_app.add_url_rule(route, view_func=view_func, *args, **kwargs)
+
+
+class FlashAndRedirect(object):
+    def __init__(self, message, level, endpoint):
+        # need to reassign to avoid capturing the reassigned endpoint
+        # in the generated closure, otherwise bad things happen at resolution
+        if not callable(endpoint):
+            # discard args and kwargs and just go to the endpoint
+            # this probably isn't *100%* correct behavior in case we need
+            # to add query params on...
+            endpoint_ = lambda *a, **k: url_for(endpoint)  # noqa
+        else:
+            endpoint_ = endpoint
+
+        self._message = message
+        self._level = level
+        self._endpoint = endpoint_
+
+    def __call__(self, *a, **k):
+        flash(self._message, self._level)
+        return redirect(self._endpoint(*a, **k))

@@ -10,12 +10,12 @@
     :license: BSD, see LICENSE for more details.
 """
 from flask import current_app, flash, redirect, url_for
-from jinja2 import Markup
 from flask_babelplus import gettext as _
+from jinja2 import Markup
 
 from flaskbb.extensions import db
-from flaskbb.utils.datastructures import TemplateEventResult
 from flaskbb.plugins.models import PluginRegistry
+from flaskbb.utils.datastructures import TemplateEventResult
 
 
 def template_hook(name, silent=True, is_markup=True, **kwargs):
@@ -24,9 +24,9 @@ def template_hook(name, silent=True, is_markup=True, **kwargs):
     :param name: The name of the hook.
     :param silent: If set to ``False``, it will raise an exception if a hook
                    doesn't exist. Defauls to ``True``.
-    :param is_markup: Determines if the hook should return a Markup object or not.
-                      Setting to False returns a TemplateEventResult object. The
-                      default is True.
+    :param is_markup: Determines if the hook should return a Markup object or
+                   not. Setting to False returns a TemplateEventResult object.
+                   The default is True.
     :param kwargs: Additional kwargs that should be passed to the hook.
     """
     try:
@@ -60,7 +60,9 @@ def remove_zombie_plugins_from_db():
     Returns the names of the deleted plugins.
     """
     d_fs_plugins = [p[0] for p in current_app.pluggy.list_disabled_plugins()]
-    d_db_plugins = [p.name for p in PluginRegistry.query.filter_by(enabled=False).all()]
+    d_db_plugins = [
+        p.name for p in PluginRegistry.query.filter_by(enabled=False).all()
+    ]  # noqa
 
     plugin_names = [p.name for p in PluginRegistry.query.all()]
 
@@ -70,8 +72,8 @@ def remove_zombie_plugins_from_db():
             remove_me.append(p)
 
     if len(remove_me) > 0:
-        PluginRegistry.query.filter(
-            PluginRegistry.name.in_(remove_me)
-        ).delete(synchronize_session='fetch')
+        PluginRegistry.query.filter(PluginRegistry.name.in_(remove_me)).delete(
+            synchronize_session="fetch"
+        )
         db.session.commit()
     return remove_me

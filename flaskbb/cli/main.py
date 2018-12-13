@@ -18,7 +18,6 @@ from datetime import datetime
 
 import click
 import click_log
-import requests
 from celery.bin.celery import CeleryCommand
 from flask import current_app
 from flask.cli import FlaskGroup, ScriptInfo, with_appcontext
@@ -57,7 +56,7 @@ class FlaskBBGroup(FlaskGroup):
             app = ctx.ensure_object(ScriptInfo).load_app()
             app.pluggy.hook.flaskbb_cli(cli=self, app=app)
             self._loaded_flaskbb_plugins = True
-        except Exception as exc:
+        except Exception:
             logger.error(
                 "Error while loading CLI Plugins",
                 exc_info=traceback.format_exc()
@@ -402,6 +401,7 @@ def generate_config(development, output, force):
         "csrf_secret_key": binascii.hexlify(os.urandom(24)).decode(),
         "timestamp": datetime.utcnow().strftime("%A, %d. %B %Y at %H:%M"),
         "log_config_path": "",
+        "deprecation_level": "default"
     }
 
     if not force:
@@ -517,11 +517,29 @@ def generate_config(development, output, force):
 
     click.secho("Optional filepath to load a logging configuration file from. "
                 "See the Python logging documentation for more detail.\n"
-                "\thttps://docs.python.org/library/logging.config.html#logging-config-fileformat",
+                "\thttps://docs.python.org/library/logging.config.html#logging-config-fileformat",  # noqa
                 fg="cyan")
     default_conf["log_config_path"] = click.prompt(
         click.style("Logging Config Path", fg="magenta"),
         default=default_conf.get("log_config_path"))
+
+    deprecation_mesg = (
+        "Warning level for deprecations. options are: \n"
+        "\terror\tturns deprecation warnings into exceptions\n"
+        "\tignore\tnever warns about deprecations\n"
+        "\talways\talways warns about deprecations even if the warning has been issued\n"  # noqa
+        "\tdefault\tshows deprecation warning once per usage\n"
+        "\tmodule\tshows deprecation warning once per module\n"
+        "\tonce\tonly shows deprecation warning once regardless of location\n"
+        "If you are unsure, select default\n"
+        "for more details see: https://docs.python.org/3/library/warnings.html#the-warnings-filter"  # noqa
+    )
+
+    click.secho(deprecation_mesg, fg="cyan")
+    default_conf["deprecation_level"] = click.prompt(
+        click.style("Deperecation warning level", fg="magenta"),
+        default=default_conf.get("deprecation_level")
+    )
 
     write_config(default_conf, config_template, config_path)
 

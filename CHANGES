@@ -3,11 +3,35 @@ Changelog
 
 Here you can see the full list of changes between each release.
 
+Version 2.1.0
+-------------
+* Reimplemented User views using services
+* Services for changing email, password, settings and details
+* Hooks for email, password, settings and details updates
+* Hook for user profile sidebar links
+* Added helper for generating dynamic navbar content
+* Gender is now a text field rather than a dropdown
+
+
+Version 2.0.2
+-------------
+
+Released July 15th, 2018
+
+* Fix issue with declaring log config file path
+
+Version 2.0.1
+-------------
+
+Released June 21st, 2018
+
+* Fix issue where activation tokens would fail with an exception
+
 
 Version 2.0.0
 -------------
 
-{{ RELEASE DATE }}
+Released on May 16th, 2018.
 
 * Improved management panel load time by requesting celery status async (PR #429)
 * Migrated FlaskBB internal behavior to use plugin hook system (PRs

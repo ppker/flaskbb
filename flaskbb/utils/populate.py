@@ -131,7 +131,11 @@ def update_settings_from_fixture(fixture, overwrite_group=False,
                     or setting.settingsgroup != group.key
                 )
 
-            if (setting is not None and overwrite_setting and setting_is_different) or setting is None:
+            if (
+                setting is not None and
+                overwrite_setting and
+                setting_is_different
+            ) or setting is None:
                 if setting is not None:
                     setting.value = settings[1]["value"]
                     setting.value_type = settings[1]["value_type"]
@@ -275,11 +279,6 @@ def create_test_data(users=5, categories=2, forums=2, topics=1, posts=1):
     user1 = User.query.filter_by(id=1).first()
     user2 = User.query.filter_by(id=2).first()
 
-    # lets send them a few private messages
-    for i in range(1, 3):
-        # TODO
-        pass
-
     # create 2 categories
     for i in range(1, categories + 1):
         category_title = "Test Category %s" % i
@@ -299,7 +298,7 @@ def create_test_data(users=5, categories=2, forums=2, topics=1, posts=1):
             forum.save()
             data_created['forums'] += 1
 
-            for t in range(1, topics + 1):
+            for _ in range(1, topics + 1):
                 # create a topic
                 topic = Topic(title="Test Title %s" % j)
                 post = Post(content="Test Content")
@@ -307,7 +306,7 @@ def create_test_data(users=5, categories=2, forums=2, topics=1, posts=1):
                 topic.save(post=post, user=user1, forum=forum)
                 data_created['topics'] += 1
 
-                for p in range(1, posts + 1):
+                for _ in range(1, posts + 1):
                     # create a second post in the forum
                     post = Post(content="Test Post")
                     post.save(user=user2, topic=topic)
@@ -350,7 +349,7 @@ def insert_bulk_data(topic_count=10, post_count=100):
         created_topics += 1
 
         # create some posts in the topic
-        for j in range(1, post_count + 1):
+        for _ in range(1, post_count + 1):
             last_post_id += 1
             post = Post(content="Some other Post", user=user2, topic=topic.id)
             topic.last_updated = post.date_created

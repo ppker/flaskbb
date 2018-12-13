@@ -43,10 +43,51 @@ class UserValidator(ABC):
 
         :param user_info: The provided registration information.
         :type user_info: :class:`~flaskbb.core.auth.registration.UserRegistrationInfo`
-        """
+        """  # noqa
 
     def __call__(self, user_info):
         return self.validate(user_info)
+
+
+class RegistrationFailureHandler(ABC):
+    """
+    Used to handle failures in the registration process.
+    """
+
+    @abstractmethod
+    def handle_failure(self, user_info, failures):
+        """
+        This method is abstract.
+
+        :param user_info: The provided registration information.
+        :param failures: Tuples of (attribute, message) from the failure
+        :type user_info: :class:`~flaskbb.core.auth.registration.UserRegistrationInfo`
+        """  # noqa
+        pass
+
+    def __call__(self, user_info, failures):
+        self.handle_failure(user_info, failures)
+
+
+class RegistrationPostProcessor(ABC):
+    """
+    Used to post proccess successful registrations by the time this
+    interface is called, the user has already been persisted into the
+    database.
+    """
+
+    @abstractmethod
+    def post_process(self, user):
+        """
+        This method is abstract.
+
+        :param user: The registered, persisted user.
+        :type user: :class:`~flaskbb.user.models.User`
+        """
+        pass
+
+    def __call__(self, user):
+        self.post_process(user)
 
 
 class UserRegistrationService(ABC):
@@ -63,5 +104,5 @@ class UserRegistrationService(ABC):
 
         :param user_info: The provided user registration information.
         :type user_info: :class:`~flaskbb.core.auth.registration.UserRegistrationInfo`
-        """
+        """  # noqa
         pass

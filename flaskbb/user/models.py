@@ -19,7 +19,7 @@ from flaskbb.utils.helpers import time_utcnow
 from flaskbb.utils.settings import flaskbb_config
 from flaskbb.utils.database import CRUDMixin, UTCDateTime, make_comparable
 from flaskbb.forum.models import Post, Topic, Forum, topictracker
-
+from flaskbb.deprecation import deprecated
 
 logger = logging.getLogger(__name__)
 
@@ -250,6 +250,7 @@ class User(db.Model, UserMixin, CRUDMixin):
         return check_password_hash(self.password, password)
 
     @classmethod
+    @deprecated("Use authentication services instead.")
     def authenticate(cls, login, password):
         """A classmethod for authenticating users.
         It returns the user object if the user/password combination is ok.
@@ -291,30 +292,29 @@ class User(db.Model, UserMixin, CRUDMixin):
         return self
 
     def all_topics(self, page, viewer):
-        """Returns a paginated result with all topics the user has created.
+        """Topics made by a given user, most recent first.
 
         :param page: The page which should be displayed.
-        :param viewer: The user who is viewing this user. It will return a
-                       list with topics that the *viewer* has access to and
-                       thus it will not display all topics from
-                       the requested user.
+        :param viewer: The user who is viewing the page. Only posts
+                       accessible to the viewer will be returned.
+        :rtype: flask_sqlalchemy.Pagination
         """
         group_ids = [g.id for g in viewer.groups]
         topics = Topic.query.\
             filter(Topic.user_id == self.id,
                    Forum.id == Topic.forum_id,
                    Forum.groups.any(Group.id.in_(group_ids))).\
+            order_by(Topic.id.desc()).\
             paginate(page, flaskbb_config['TOPICS_PER_PAGE'], False)
         return topics
 
     def all_posts(self, page, viewer):
-        """Returns a paginated result with all posts the user has created.
+        """Posts made by a given user, most recent first.
 
         :param page: The page which should be displayed.
-        :param viewer: The user who is viewing this user. It will return a
-                       list with posts that the *viewer* has access to and
-                       thus it will not display all posts from
-                       the requested user.
+        :param viewer: The user who is viewing the page. Only posts
+                       accessible to the viewer will be returned.
+        :rtype: flask_sqlalchemy.Pagination
         """
         group_ids = [g.id for g in viewer.groups]
         posts = Post.query.\
@@ -322,6 +322,7 @@ class User(db.Model, UserMixin, CRUDMixin):
                    Post.topic_id == Topic.id,
                    Topic.forum_id == Forum.id,
                    Forum.groups.any(Group.id.in_(group_ids))).\
+            order_by(Post.id.desc()).\
             paginate(page, flaskbb_config['TOPICS_PER_PAGE'], False)
         return posts
 

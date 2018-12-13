@@ -11,7 +11,7 @@
 
 from pluggy import HookspecMarker
 
-spec = HookspecMarker('flaskbb')
+spec = HookspecMarker("flaskbb")
 
 
 # Setup Hooks
@@ -197,12 +197,100 @@ def flaskbb_event_topic_save_after(topic, is_new):
     """
 
 
+# TODO(anr): When pluggy 1.0 is released, mark this spec deprecated
 @spec
 def flaskbb_event_user_registered(username):
     """Hook for handling events after a user is registered
 
+    .. warning::
+
+        This hook is deprecated in favor of
+        :func:`~flaskbb.plugins.spec.flaskbb_registration_post_processor`
+
     :param username: The username of the newly registered user.
     """
+
+
+@spec
+def flaskbb_gather_registration_validators():
+    """
+    Hook for gathering user registration validators, implementers must return
+    a callable that accepts a
+    :class:`~flaskbb.core.auth.registration.UserRegistrationInfo` and raises
+    a :class:`~flaskbb.core.exceptions.ValidationError` if the registration
+    is invalid or :class:`~flaskbb.core.exceptions.StopValidation` if
+    validation of the registration should end immediatey.
+
+    Example::
+
+        def cannot_be_named_fred(user_info):
+            if user_info.username.lower() == 'fred':
+                raise ValidationError(('username', 'Cannot name user fred'))
+
+        @impl
+        def flaskbb_gather_registration_validators():
+            return [cannot_be_named_fred]
+
+    .. note::
+
+        This is implemented as a hook that returns callables since the
+        callables are designed to raise exceptions that are aggregated to
+        form the failure message for the registration response.
+
+    See Also: :class:`~flaskbb.core.auth.registration.UserValidator`
+    """
+
+
+@spec
+def flaskbb_registration_failure_handler(user_info, failures):
+    """
+    Hook for dealing with user registration failures, receives the info
+    that user attempted to register with as well as the errors that failed
+    the registration.
+
+    Example::
+
+        from .utils import fuzz_username
+
+        def has_already_registered(failures):
+            return any(
+                attr = "username" and "already registered" in msg
+                for (attr, msg) in failures
+            )
+
+
+        def suggest_alternate_usernames(user_info, failures):
+            if has_already_registered(failures):
+                suggestions = fuzz_username(user_info.username)
+                failures.append(("username", "Try: {}".format(suggestions)))
+
+
+        @impl
+        def flaskbb_registration_failure_handler(user_info, failures):
+            suggest_alternate_usernames(user_info, failures)
+
+    See Also: :class:`~flaskbb.core.auth.registration.RegistrationFailureHandler`
+    """  # noqa
+
+
+@spec
+def flaskbb_registration_post_processor(user):
+    """
+    Hook for handling actions after a user has successfully registered. This
+    spec receives the user object after it has been successfully persisted
+    to the database.
+
+    Example::
+
+        def greet_user(user):
+            flash(_("Thanks for registering {}".format(user.username)))
+
+        @impl
+        def flaskbb_registration_post_processor(user):
+            greet_user(user)
+
+    See Also: :class:`~flaskbb.core.auth.registration.RegistrationPostProcessor`
+    """  # noqa
 
 
 @spec(firstresult=True)
@@ -256,7 +344,8 @@ def flaskbb_authenticate(identifier, secret):
             if user is not None:
                 if has_too_many_failed_logins(user):
                     raise StopAuthentication(_(
-                        "Your account is temporarily locked due to too many login attempts"
+                        "Your account is temporarily locked due to too many"
+                        " login attempts"
                     ))
 
         @impl(tryfirst=True)
@@ -357,7 +446,9 @@ def flaskbb_reauth_attempt(user, secret):
         @impl
         def flaskbb_reauth_attempt(user, secret):
             if user.login_attempts > 5:
-                raise StopAuthentication(_("Too many failed authentication attempts"))
+                raise StopAuthentication(
+                    _("Too many failed authentication attempts")
+                )
     """
 
 
@@ -453,6 +544,158 @@ def flaskbb_form_registration(form):
     """
 
 
+@spec
+def flaskbb_gather_password_validators(app):
+    """
+    Hook for gathering :class:`~flaskbb.core.changesets.ChangeSetValidator`
+    instances specialized for handling :class:`~flaskbb.core.user.update.PasswordUpdate`
+    This hook should return an iterable::
+
+        class NotLongEnough(ChangeSetValidator):
+            def __init__(self, min_length):
+                self._min_length = min_length
+
+            def validate(self, model, changeset):
+                if len(changeset.new_password) < self._min_length:
+                    raise ValidationError(
+                        "new_password",
+                        "Password must be at least {} characters ".format(
+                            self._min_length
+                        )
+                    )
+
+        @impl
+        def flaskbb_gather_password_validators(app):
+            return [NotLongEnough(app.config['MIN_PASSWORD_LENGTH'])]
+
+    :param app: The current application
+    """
+
+
+@spec
+def flaskbb_gather_email_validators(app):
+    """
+    Hook for gathering :class:`~flaskbb.core.changesets.ChangeSetValidator`
+    instances specialized for :class:`~flaskbb.core.user.update.EmailUpdate`.
+    This hook should return an iterable::
+
+        class BlackListedEmailProviders(ChangeSetValidator):
+            def __init__(self, black_list):
+                self._black_list = black_list
+
+            def validate(self, model, changeset):
+                provider = changeset.new_email.split('@')[1]
+                if provider in self._black_list:
+                    raise ValidationError(
+                        "new_email",
+                        "{} is a black listed email provider".format(provider)
+                    )
+
+        @impl
+        def flaskbb_gather_email_validators(app):
+            return [BlackListedEmailProviders(app.config["EMAIL_PROVIDER_BLACK_LIST"])]
+
+    :param app: The current application
+    """
+
+
+@spec
+def flaskbb_gather_details_update_validators(app):
+    """
+    Hook for gathering :class:`~flaskbb.core.changesets.ChangeSetValidator`
+    instances specialized for :class:`~flaskbb.core.user.update.UserDetailsChange`.
+    This hook should return an iterable::
+
+        class DontAllowImageSignatures(ChangeSetValidator):
+            def __init__(self, renderer):
+                self._renderer = renderer
+
+            def validate(self, model, changeset):
+                rendered = self._renderer.render(changeset.signature)
+                if '<img' in rendered:
+                    raise ValidationError("signature", "No images allowed in signature")
+
+        @impl
+        def flaskbb_gather_details_update_validators(app):
+            renderer = app.pluggy.hook.flaskbb_load_nonpost_markdown_class()
+            return [DontAllowImageSignatures(renderer())]
+
+    :param app: The current application
+    """
+
+
+@spec
+def flaskbb_details_updated(user, details_update):
+    """
+    Hook for responding to a user updating their details. This hook is called
+    after the details update has been persisted.
+
+    See also :class:`~flaskbb.core.changesets.ChangeSetPostProcessor`
+
+    :param user: The user whose details have been updated.
+    :param details_update: The details change set applied to the user.
+    """
+
+
+@spec
+def flaskbb_password_updated(user):
+    """
+    Hook for responding to a user updating their password. This hook is called
+    after the password change has been persisted::
+
+
+        @impl
+        def flaskbb_password_updated(app, user):
+            send_email(
+                "Password changed",
+                [user.email],
+                text_body=...,
+                html_body=...
+            )
+
+
+    See also :class:`~flaskbb.core.changesets.ChangeSetPostProcessor`
+
+    :param user: The user that updated their password.
+    """
+
+
+@spec
+def flaskbb_email_updated(user, email_update):
+    """
+    Hook for responding to a user updating their email. This hook is called after
+    the email change has been persisted::
+
+
+        @impl
+        def flaskbb_email_updated(app):
+            send_email(
+                "Email changed",
+                [email_change.old_email],
+                text_body=...,
+                html_body=...
+            )
+
+    See also :class:`~flaskbb.core.changesets.ChangeSetPostProcessor`.
+
+    :param user: The user whose email was updated.
+    :param email_update: The change set applied to the user.
+    """
+
+
+@spec
+def flaskbb_settings_updated(user, settings_update):
+    """
+    Hook for responding to a user updating their settings. This hook is called after
+    the settings change has been persisted.
+
+    See also :class:`~flaskbb.core.changesets.ChangeSetPostProcessor`
+
+    :param user: The user whose settings have been updated.
+    :param settings: The settings change set applied to the user.
+    """
+
+
 # Template Hooks
 @spec
 def flaskbb_tpl_navigation_before():
@@ -533,7 +776,7 @@ def flaskbb_tpl_form_user_details_after(form):
 
 
 @spec
-def flaskbb_tpl_profile_settings_menu():
+def flaskbb_tpl_profile_settings_menu(user):
     """This hook is emitted on the user settings page in order to populate the
     side bar menu. Implementations of this hook should return a list of tuples
     that are view name and display text. The display text will be provided to
@@ -559,6 +802,53 @@ def flaskbb_tpl_profile_settings_menu():
     supplies its own hookwrapper to flatten all the lists into a single list.
 
     in :file:`templates/user/settings_layout.html`
+
+    .. versionchanged:: 2.1.0
+        The user param. Typically this will be the current user but might not
+        always be the current user.
+
+    :param user: The user the settings menu is being rendered for.
+    """
+
+
+@spec
+def flaskbb_tpl_profile_sidebar_links(user):
+    """
+    This hook is emitted on the user profile page in order to populate the
+    sidebar menu. Implementations of this hook should return an iterable of
+    :class:`~flaskbb.display.navigation.NavigationItem` instances::
+
+        @impl
+        def flaskbb_tpl_profile_sidebar_links(user):
+            return [
+                NavigationLink(
+                    endpoint="user.profile",
+                    name=_("Overview"),
+                    icon="fa fa-home",
+                    urlforkwargs={"username": user.username},
+                ),
+                NavigationLink(
+                    endpoint="user.view_all_topics",
+                    name=_("Topics"),
+                    icon="fa fa-comments",
+                    urlforkwargs={"username": user.username},
+                ),
+                NavigationLink(
+                    endpoint="user.view_all_posts",
+                    name=_("Posts"),
+                    icon="fa fa-comment",
+                    urlforkwargs={"username": user.username},
+                ),
+            ]
+
+
+    .. warning::
+        Hookwrappers for this spec should not be registered as FlaskBB registers
+        its own hook wrapper to flatten all the results into a single list.
+
+    .. versionadded:: 2.1
+
+    :param user: The user the profile page belongs to.
     """
 
 
