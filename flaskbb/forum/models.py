@@ -14,7 +14,19 @@ from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, override
 
 from flask import abort, url_for
-from sqlalchemy import Column, ForeignKey, Integer, String, Table, Text, or_
+from sqlalchemy import (
+    Column,
+    ForeignKey,
+    Integer,
+    String,
+    Table,
+    Text,
+    func,
+    join,
+    or_,
+    select,
+    update,
+)
 from sqlalchemy.orm import Mapped, aliased, mapped_column, relationship
 
 from flaskbb.extensions import db, pluggy
@@ -135,6 +147,15 @@ class ForumsRead(db.Model, CRUDMixin):
     cleared: Mapped[datetime | None] = mapped_column(
         UTCDateTime(timezone=True), nullable=True
     )
+
+    @classmethod
+    def get_for_user(cls, user_id: int, forum_id: int):
+        return db.session.execute(
+            db.select(ForumsRead).where(
+                ForumsRead.user_id == user_id,
+                ForumsRead.forum_id == forum_id,
+            )
+        ).scalar()
 
 
 @make_comparable
@@ -468,7 +489,7 @@ class Post(HideableCRUDMixin, db.Model):
         # should never be None, but deal with it anyways to be safe
         if last_unhidden_post and self.date_created > last_unhidden_post.date_created:
             self.topic.last_post = self
-            self.second_last_post = last_unhidden_post
+            self.second_last_post = last_unhidden_post  # TODO
 
             # if we're the newest in the topic again, we might be the newest
             # in the forum again only set if our parent topic isn't hidden
@@ -638,13 +659,28 @@ class Topic(HideableCRUDMixin, db.Model):
         return self.url
 
     @classmethod
-    def get_topic(cls, topic_id: int, user: "User"):
-        topic = db.session.execute(
-            db.select(cls).filter_by(id=topic_id)
-        ).scalar_one_or_none()
+    def get_topic(cls, topic_id: int, hiddencheck: bool = False):
+        stmt = select(cls).where(Topic.id == topic_id)
+        if hiddencheck:
+            stmt = hidden(stmt)
+
+        topic = db.session.execute(stmt).scalar_one_or_none()
         if topic is None:
             abort(404)
         return topic
+
+    @classmethod
+    def get_posts(cls, topic_id: int, page: int | None):
+        stmt = (
+            select(Post, User)
+            .outerjoin(User, Post.user_id == User.id)
+            .where(Post.topic_id == topic_id)
+            .order_by(Post.id.asc())
+        )
+        posts = paginate(
+            hidden(stmt), page=page, per_page=flaskbb_config["POSTS_PER_PAGE"]
+        )
+        return posts
 
     def tracker_needs_update(
         self, forumsread: "ForumsRead | None", topicsread: "TopicsRead | None"
@@ -692,7 +728,7 @@ class Topic(HideableCRUDMixin, db.Model):
         logger.debug("Topic is unread.")
         return True
 
-    def update_read(self, user: "User", forum: "Forum", forumsread: "ForumsRead"):
+    def update_read(self, user: "User", forum: "Forum", forumsread: "ForumsRead | None"):
         """Updates the topicsread and forumsread tracker for a specified user,
         if the topic contains new posts or the user hasn't read the topic.
         Returns True if the tracker has been updated.
@@ -930,7 +966,7 @@ class Topic(HideableCRUDMixin, db.Model):
         user_ids = [user.id for user in users]
 
         post_count_subquery = (
-            db.select(db.func.count(Post.id))
+            select(func.count(Post.id))
             .join(Topic, Post.topic_id == Topic.id)
             .where(
                 Post.user_id == User.id,
@@ -941,7 +977,7 @@ class Topic(HideableCRUDMixin, db.Model):
         )
 
         stmt = (
-            db.update(User)
+            update(User)
             .where(User.id.in_(user_ids))
             .values(post_count=post_count_subquery)
         )
@@ -958,12 +994,15 @@ class Topic(HideableCRUDMixin, db.Model):
 
         forum.topic_count = db.session.scalar(stmt_topic_count)
 
+        stmt = (
+            select(db.func.count(Post.id))
+            .select_from(join(Post, Topic, Post.topic_id == Topic.id))
+            .where(Topic.forum_id == forum.id)
+        )
         if self.hidden:
-            stmt_post_count = stmt.join(Post, Post.topic_id == Topic.id).where(
-                Post.hidden.is_(False)
-            )
+            stmt_post_count = stmt.where(Post.hidden.is_(False))
         else:
-            stmt_post_count = stmt.join(Post, Post.topic_id == Topic.id).where(
+            stmt_post_count = stmt.where(
                 or_(Post.hidden.is_(False), Post.id == self.first_post_id)
             )
 

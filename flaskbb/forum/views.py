@@ -28,7 +28,7 @@ from flask_allows2 import And, Permission
 from flask_babelplus import gettext as _
 from flask_login import current_user, login_required
 from pluggy import HookimplMarker
-from sqlalchemy import asc, desc
+from sqlalchemy import asc, desc, select
 
 from flaskbb.extensions import allows, db, pluggy
 from flaskbb.forum.forms import (
@@ -213,7 +213,7 @@ class ViewTopic(MethodView):
         page = request.args.get("page", 1, type=int)
 
         # Fetch some information about the topic
-        topic = Topic.get_topic(topic_id=topic_id, user=real(current_user))
+        topic = Topic.get_topic(topic_id, True)
 
         # Count the topic views
         topic.views += 1
@@ -222,25 +222,12 @@ class ViewTopic(MethodView):
         # Update the topicsread status if the user hasn't read it
         forumsread = None
         if current_user.is_authenticated:
-            forumsread = db.session.execute(
-                db.select(ForumsRead).where(
-                    ForumsRead.user_id == current_user.id,
-                    ForumsRead.forum_id == topic.forum_id,
-                )
-            ).scalar()
+            forumsread = ForumsRead.get_for_user(current_user.id, topic.forum_id)
 
         topic.update_read(real(current_user), topic.forum, forumsread)
 
         # fetch the posts in the topic
-        stmt = (
-            db.select(Post, User)
-            .options(db.joinedload(Post.user))
-            .where(Post.topic_id == topic.id)
-            .order_by(Post.id.asc())
-        )
-        posts = paginate(
-            hidden(stmt), page=page, per_page=flaskbb_config["POSTS_PER_PAGE"]
-        )
+        posts = Topic.get_posts(topic_id, page)
 
         # Abort if there are no posts on this page
         if len(posts.items) == 0:
@@ -266,7 +253,7 @@ class ViewTopic(MethodView):
         ),
     )
     def post(self, topic_id: int, slug: str | None = None):
-        topic = Topic.get_topic(topic_id=topic_id, user=real(current_user))
+        topic = Topic.get_topic(topic_id, True)
         form = self.form()
 
         if not form:
@@ -345,7 +332,7 @@ class EditTopic(MethodView):
     ]
 
     def get(self, topic_id: int, slug: str | None = None):
-        topic = first_or_404(db.select(Topic).where(Topic.id == topic_id), True)
+        topic = Topic.get_topic(topic_id, True)
         form = self.form(obj=topic.first_post, title=topic.title)
         form.track_topic.data = current_user.is_tracking_topic(topic)
 
@@ -354,7 +341,7 @@ class EditTopic(MethodView):
         )
 
     def post(self, topic_id: int, slug: str | None = None):
-        topic = first_or_404(db.select(Topic).where(Topic.id == topic_id), True)
+        topic = Topic.get_topic(topic_id, True)
         post = topic.first_post
         form = self.form(obj=post, title=topic.title)
 
@@ -501,7 +488,7 @@ class ManageForum(MethodView):
 
         # moving
         elif "move" in request.form:
-            new_forum_id = request.form.get("forum")
+            new_forum_id = request.form.get("forum", type=int)
 
             if not new_forum_id:
                 flash(_("Please choose a new forum for the topics."), "info")
@@ -569,7 +556,7 @@ class NewPost(MethodView):
     ]
 
     def get(self, topic_id: int, slug: str | None = None, post_id: int | None = None):
-        topic = first_or_404(db.select(Topic).where(Topic.id == topic_id), True)
+        topic = Topic.get_topic(topic_id, True)
         form = self.form()
         form.track_topic.data = current_user.is_tracking_topic(topic)
 
@@ -580,7 +567,7 @@ class NewPost(MethodView):
         return render_template("forum/new_post.html", topic=topic, form=form)
 
     def post(self, topic_id: int, slug: str | None = None, post_id: int | None = None):
-        topic = first_or_404(db.select(Topic).where(Topic.id == topic_id), True)
+        topic = Topic.get_topic(topic_id, True)
         form = self.form()
 
         # check if topic exists
