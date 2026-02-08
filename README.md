@@ -1,11 +1,8 @@
 # FlaskBB
 
 [![Build Status](https://github.com/flaskbb/flaskbb/actions/workflows/tests.yml/badge.svg)](https://github.com/flaskbb/flaskbb/actions/workflows/tests.yml)
-[![codecov](https://codecov.io/gh/flaskbb/flaskbb/branch/master/graph/badge.svg)](https://codecov.io/gh/flaskbb/flaskbb)
-[![requires](https://requires.io/github/flaskbb/flaskbb/requirements.svg?branch=master)](https://requires.io/github/flaskbb/flaskbb/requirements/?branch=master)
 [![License](https://img.shields.io/badge/license-BSD-blue.svg)](https://https://github.com/flaskbb/flaskbb)
 [![#flaskbb:matrix.org](https://img.shields.io/badge/[matrix]-%23flaskbb%3Amatrix.org-blue)](https://matrix.to/#/#flaskbb:matrix.org)
-[![#flaskbb@libera.chat](https://img.shields.io/badge/irc.libera.chat-%23flaskbb-blue.svg)](https://web.libera.chat/?channel=#flaskbb)
 
 *FlaskBB is a Forum Software written in Python using the micro framework Flask.*
 
