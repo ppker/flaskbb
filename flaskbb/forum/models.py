@@ -671,6 +671,8 @@ class Topic(HideableCRUDMixin, db.Model):
 
     @classmethod
     def get_posts(cls, topic_id: int, page: int | None):
+        from ..user.models import User
+
         stmt = (
             select(Post, User)
             .outerjoin(User, Post.user_id == User.id)
@@ -728,7 +730,9 @@ class Topic(HideableCRUDMixin, db.Model):
         logger.debug("Topic is unread.")
         return True
 
-    def update_read(self, user: "User", forum: "Forum", forumsread: "ForumsRead | None"):
+    def update_read(
+        self, user: "User", forum: "Forum", forumsread: "ForumsRead | None"
+    ):
         """Updates the topicsread and forumsread tracker for a specified user,
         if the topic contains new posts or the user hasn't read the topic.
         Returns True if the tracker has been updated.

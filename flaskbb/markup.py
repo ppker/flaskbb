@@ -11,6 +11,7 @@ A module for all markup related stuff.
 
 import logging
 import re
+from collections.abc import Iterable
 from typing import Callable
 
 import mistune
@@ -37,7 +38,6 @@ from pygments import highlight
 from pygments.formatters import HtmlFormatter
 from pygments.lexers import get_lexer_by_name
 from pygments.util import ClassNotFound
-from typing_extensions import Iterable
 
 from flaskbb.extensions import pluggy
 
@@ -45,47 +45,32 @@ impl = HookimplMarker("flaskbb")
 
 logger = logging.getLogger(__name__)
 
-MENTION_PATTERN = r"@(\w+)"
+# MENTION_PATTERN = r"@(?:(?<!\\)(?:\\\\)*\\|\w+|\\ \.)(?: |$|)"
+MENTION_REGEX = re.compile(r"\B@([\w\-]+)")
 
 
-def parse_mention(
-    inline: mistune.InlineParser, m: re.Match[str], state: mistune.InlineState
-) -> int:
-    """Parse @username mention and return token"""
-    username = m.group(0)
-    state.append_token({"type": "mention", "raw": username})
-    return m.end()
+def replace_mention_with_linktag(m: re.Match[str]) -> str:
+    username = m.group(1)
+    url = url_for("user.profile", username=username, _external=False)
+    return f"[{m.group(0)}]({url})"
 
 
-def render_html_mention(renderer: mistune.HTMLRenderer, text: str):
-    """Render mention token as HTML link"""
-    url = url_for("user.profile", username=text, _external=False)
-    return f'<a href="{url.replace("@", "")}">{text}</a>'
+def process_mentions(md: mistune.Markdown, state: mistune.BlockState):
+    state.src = MENTION_REGEX.sub(replace_mention_with_linktag, state.src)
 
 
 def plugin_mention(md: mistune.Markdown):
     """
-    Mistune v3 plugin to parse @username mentions and convert them to links.
-
-    Usage:
-        import mistune
-        from mention_plugin import plugin_mention
-
-        md = mistune.create_markdown(plugins=[plugin_mention])
-        html = md("Hello @john, how are you?")
+    Mistune plugin to parse @username mentions and convert them
+    to [@username](/user/username) tags.
+    I couldn't get it to work otherwise. If anyone knows a better way
+    or knows regex better feel free to open a PR :)
     """
-
-    # Pattern to match @username (alphanumeric and underscores)
-
-    # Register the inline rule
-    md.inline.register("mention", MENTION_PATTERN, parse_mention, before="link")
-
-    # Register the HTML renderer
-    if md.renderer and md.renderer.NAME == "html":
-        md.renderer.register("mention", render_html_mention)
+    md.before_parse_hooks.append(process_mentions)
 
 
 DEFAULT_PLUGINS = [
+    plugin_mention,
     url,
     strikethrough,
     spoiler,
@@ -99,7 +84,6 @@ DEFAULT_PLUGINS = [
     table,
     footnotes,
     speedup,
-    plugin_mention,
 ]
 
 

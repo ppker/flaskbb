@@ -95,6 +95,10 @@ export function send_data(endpoint_url, data) {
         .then((response) => response.json())
         .then((data) => {
             flash_message(data);
+
+            if (data?.data == null) {
+                return;
+            }
             for (let obj of data.data) {
                 // get the form
                 const form_id = `#${obj.type}-${obj.id}`;
@@ -117,6 +121,7 @@ export function send_data(endpoint_url, data) {
             }
         })
         .catch((error) => {
+            console.error("error: ", error);
             flash_message(error);
         });
 }
@@ -239,7 +244,7 @@ document.addEventListener("DOMContentLoaded", function (event) {
         if (el.dataset.what_to_display == "date-only") {
             options.hour = undefined;
             options.minute = undefined;
-        } else if (el.dataset.what_to_display== "time-only") {
+        } else if (el.dataset.what_to_display == "time-only") {
             options.year = undefined;
             options.month = undefined;
             options.day = undefined;

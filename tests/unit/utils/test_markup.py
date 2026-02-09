@@ -9,7 +9,13 @@ def test_userify():
     # user link rendering plugin
     with current_app.test_request_context():
         result = markdown("@sh4nks is developing flaskbb.")
-    assert all(substring in result for substring in ("/user/sh4nks", "<a href="))
+        result2 = markdown("Hello, @sh4nks is developing @flaskbb @wow.")
+
+    assert all(substring in result for substring in ("/user/sh4nks"))
+    assert all(
+        substring in result2
+        for substring in ("/user/sh4nks", "/user/flaskbb", "/user/wow")
+    )
 
 
 def test_highlighting():
