@@ -16,7 +16,7 @@
             {{ horizontal_field(form.login)}}
             {{ horizontal_field(form.password)}}
             {{ horizontal_field(form.remember_me, div_class="offset-3 col-4") }}
-            {% if flaskbb_config["RECAPTCHA_ENABLED"] %}
+            {% if flaskbb_config["RECAPTCHA_ENABLED"] and 'recaptcha' in form %}
                 {{ horizontal_field(form.recaptcha) }}
             {% endif %}
 

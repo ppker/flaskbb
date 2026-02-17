@@ -38,7 +38,7 @@ is_valid_username = regexp(
 )
 
 
-@add_recaptcha_field
+@add_recaptcha_field()
 class LoginForm(FlaskBBForm):
     login = StringField(
         _("Username or Email address"),
@@ -57,7 +57,7 @@ class LoginForm(FlaskBBForm):
     submit = SubmitField(_("Login"))
 
 
-@add_recaptcha_field
+@add_recaptcha_field(only_on_ratelimit=True)
 class RegisterForm(FlaskBBForm):
     username = StringField(
         _("Username"),
@@ -105,7 +105,7 @@ class ReauthForm(FlaskBBForm):
     submit = SubmitField(_("Refresh Login"))
 
 
-@add_recaptcha_field
+@add_recaptcha_field()
 class ForgotPasswordForm(FlaskBBForm):
     email = StringField(
         _("Email address"),

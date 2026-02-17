@@ -156,7 +156,7 @@ class Register(MethodView):
         pluggy.hook.flaskbb_form_registration(form=RegisterForm)
         form = RegisterForm()
 
-        form.language.choices = get_available_languages()
+        form.language.choices = get_available_languages()  # pyright: ignore
         form.language.default = flaskbb_config["DEFAULT_LANGUAGE"]
         form.process(request.form)  # needed because a default is overriden
         return form

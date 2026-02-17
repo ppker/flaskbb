@@ -37,7 +37,7 @@ class Has(Requirement):
 
 class IsAuthed(Requirement):
     @override
-    def fulfill(self, user: User):
+    def fulfill(self, user: User) -> bool:
         return user.is_authenticated
 
 
@@ -164,7 +164,7 @@ class ForumNotLocked(Requirement):
 
     def _is_forum_locked(self):
         forum = self._determine_forum()
-        return forum and not forum.locked
+        return forum is not None and forum.locked
 
     def _determine_forum(self):
         if self._forum is not None:

@@ -9,6 +9,7 @@ This module contains stuff for forms.
 :license: BSD, see LICENSE for more details.
 """
 
+import functools
 from enum import Enum
 from typing import Any, TypeVar
 
@@ -26,31 +27,38 @@ from wtforms import (
 
 from flaskbb.extensions import limiter
 
-C = TypeVar("C", bound=Any)
+_F = TypeVar("_F", bound="FlaskBBForm")
 
 
-def add_recaptcha_field(cls: C, only_on_ratelimit: bool = False) -> C:
-    def wrapper(*args: Any, **kwargs: Any) -> "C":
-        from flaskbb.utils.helpers import enforce_recaptcha
-        from flaskbb.utils.settings import flaskbb_config
+def add_recaptcha_field(only_on_ratelimit: bool = False):
+    def decorator(cls: type[_F]):
+        @functools.wraps(cls)
+        def decorated_class(*args: Any, **kwargs: Any) -> _F:
+            from flaskbb.utils.helpers import enforce_recaptcha
+            from flaskbb.utils.settings import flaskbb_config
 
-        if flaskbb_config["RECAPTCHA_ENABLED"]:
-            if (
-                not only_on_ratelimit
-                or only_on_ratelimit
-                and enforce_recaptcha(limiter)
-            ):
-                setattr(cls, "recaptcha", RecaptchaField(_("Captcha")))
+            if flaskbb_config["RECAPTCHA_ENABLED"]:
+                if (
+                    not only_on_ratelimit
+                    or only_on_ratelimit
+                    and enforce_recaptcha(limiter)
+                ):
 
-        return cls()
+                    class RecaptchaEnabledForm(cls):
+                        recaptcha = RecaptchaField(_("Captcha"))
 
-    return wrapper  # pyright: ignore
+                    return RecaptchaEnabledForm()  # pyright: ignore
+            return cls()
+
+        return decorated_class
+
+    return decorator
 
 
 class FlaskBBForm(FlaskForm):
     def populate_errors(self, errors: list[tuple[str, str]]):
         for attribute, reason in errors:
-            self.errors.setdefault(attribute, []).append(reason)
+            self.errors.setdefault(attribute, []).append(reason)  # pyright: ignore
             field = getattr(self, attribute, None)
             if field:
                 field.errors.append(reason)

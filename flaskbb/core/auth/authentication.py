@@ -7,11 +7,15 @@ flaskbb.core.auth.authentication
 """
 
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, TypeAlias
 
 if TYPE_CHECKING:
+    from werkzeug.local import LocalProxy
+
     from flaskbb.user.models import User
 from ..exceptions import BaseFlaskBBError
+
+CurrentUser: TypeAlias = "LocalProxy[User | None] | LocalProxy[Any | None]"
 
 
 class StopAuthentication(BaseFlaskBBError):
@@ -159,7 +163,7 @@ class PostAuthenticationHandler(ABC):
     """
 
     @abstractmethod
-    def handle_post_auth(self, user: "User"):
+    def handle_post_auth(self, user: "User | CurrentUser"):
         """
         This method is abstact.
 
@@ -168,7 +172,7 @@ class PostAuthenticationHandler(ABC):
         """
         pass
 
-    def __call__(self, user: "User"):
+    def __call__(self, user: "User | CurrentUser"):
         self.handle_post_auth(user)
 
 
@@ -183,7 +187,7 @@ class ReauthenticateManager(ABC):
     """
 
     @abstractmethod
-    def reauthenticate(self, user: "User", secret: str):
+    def reauthenticate(self, user: "User | CurrentUser", secret: str | None):
         """
         This method is abstract.
 
@@ -193,7 +197,7 @@ class ReauthenticateManager(ABC):
         """
         pass
 
-    def __call__(self, user: "User", secret: str):
+    def __call__(self, user: "User | CurrentUser", secret: str | None):
         pass
 
 
@@ -232,7 +236,9 @@ class ReauthenticateProvider(ABC):
     """
 
     @abstractmethod
-    def reauthenticate(self, user: "User", secret: str) -> bool | None:
+    def reauthenticate(
+        self, user: "User | CurrentUser", secret: str | None
+    ) -> bool | None:
         """
         This method is abstract.
 
@@ -244,7 +250,7 @@ class ReauthenticateProvider(ABC):
 
         pass
 
-    def __call__(self, user: "User", secret: str):
+    def __call__(self, user: "User | CurrentUser", secret: str | None):
         self.reauthenticate(user, secret)
 
 
@@ -258,7 +264,7 @@ class ReauthenticateFailureHandler(ABC):
     """
 
     @abstractmethod
-    def handle_reauth_failure(self, user: "User"):
+    def handle_reauth_failure(self, user: "User | CurrentUser"):
         """
         This method is abstract.
 
@@ -267,7 +273,7 @@ class ReauthenticateFailureHandler(ABC):
         """
         pass
 
-    def __call__(self, user: "User"):
+    def __call__(self, user: "User | CurrentUser"):
         self.handle_reauth_failure(user)
 
 
@@ -282,7 +288,7 @@ class PostReauthenticateHandler(ABC):
     """
 
     @abstractmethod
-    def handle_post_reauth(self, user: "User"):
+    def handle_post_reauth(self, user: "User | CurrentUser"):
         """
         This method is abstract.
 
@@ -291,5 +297,5 @@ class PostReauthenticateHandler(ABC):
         """
         pass
 
-    def __call__(self, user: "User"):
+    def __call__(self, user: "User | CurrentUser"):
         self.handle_post_reauth(user)
