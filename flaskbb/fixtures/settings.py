@@ -187,25 +187,8 @@ fixture = (
                         "description": (
                             "Helps to prevent bots from creating accounts. "
                             "For more information visit this link: <a href=http://www.google.com/recaptcha>http://www.google.com/recaptcha</a>"  # noqa
+                            "Note: RECAPTCHA_PUBLIC_KEY (Site Key) and RECAPTCHA_PRIVATE_KEY (Secret Key) must be set via environment variables or in 'flaskbb.cfg'."
                         ),
-                    },
-                ),
-                (
-                    "recaptcha_public_key",
-                    {
-                        "value": "",
-                        "value_type": SettingValueType.string,
-                        "name": "reCAPTCHA Site Key",
-                        "description": "Your public recaptcha key ('Site key').",  # noqa
-                    },
-                ),
-                (
-                    "recaptcha_private_key",
-                    {
-                        "value": "",
-                        "value_type": SettingValueType.string,
-                        "name": "reCAPTCHA Secret Key",
-                        "description": "The private key ('Secret key'). Keep this a secret!",  # noqa
                     },
                 ),
             ),

@@ -470,7 +470,7 @@ def time_diff():
     variable from the configuration.
     """
     now = time_utcnow()
-    diff = now - timedelta(minutes=flaskbb_config["ONLINE_LAST_MINUTES"])
+    diff = now - timedelta(minutes=flaskbb_config["ONLINE_LAST_MINUTES"] or 15)
     return diff
 
 

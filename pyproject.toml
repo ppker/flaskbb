@@ -124,12 +124,15 @@ reportExplicitAny = false
 
 [tool.pytest]
 minversion = "9.0"
+filterwarnings = [
+    "ignore::jwt.warnings.InsecureKeyLengthWarning"
+]
 addopts = [
     "-vvl",
     "--strict-markers",
     "--capture", "fd",
     "--tb", "short",
-    "--pythonwarnings",  "error::flaskbb.deprecation.FlaskBBDeprecation",
+    "--pythonwarnings", "error::flaskbb.deprecation.FlaskBBDeprecation",
     "--numprocesses", "auto",
     "--dist", "load"
 ]
