@@ -7,68 +7,69 @@
 # Toshiki Wulf <webmedia@toshiki.de>, 2017
 msgid ""
 msgstr ""
-"Project-Id-Version:  FlaskBB\n"
+"Project-Id-Version: FlaskBB\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
 "POT-Creation-Date: 2026-02-08 16:25+0100\n"
-"PO-Revision-Date: 2024-06-17 12:09+0000\n"
-"Last-Translator: Ettore Atalan <atalanttore@googlemail.com>\n"
+"PO-Revision-Date: 2026-02-20 08:09+0000\n"
+"Last-Translator: Peter Justin <peter@peterjustin.me>\n"
+"Language-Team: German <https://hosted.weblate.org/projects/flaskbb/flaskbb/"
+"de/>\n"
 "Language: de\n"
-"Language-Team: German "
-"<https://hosted.weblate.org/projects/flaskbb/flaskbb/de/>\n"
-"Plural-Forms: nplurals=2; plural=n != 1;\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"X-Generator: Weblate 5.16.1-dev\n"
 "Generated-By: Babel 2.18.0\n"
 
 #: flaskbb/deprecation.py:72
 #, python-format
 msgid "%(name)s is deprecated and will be removed in version %(version)s."
-msgstr ""
+msgstr "%(name)s ist veraltet und wird entfernt mit Version %(version)s."
 
 #: flaskbb/email.py:32
 msgid "Password Recovery Confirmation"
-msgstr ""
+msgstr "Bestätigung der Passwortwiederherstellung"
 
 #: flaskbb/email.py:52 flaskbb/templates/auth/account_activation.html:1
 #: flaskbb/templates/auth/account_activation.html:10
 msgid "Account Activation"
-msgstr ""
+msgstr "Account aktivierung"
 
 #: flaskbb/auth/forms.py:38 flaskbb/management/forms.py:54
 msgid "You can only use letters, numbers or dashes."
-msgstr ""
+msgstr "Es sind nur Buchstaben, Zahlen und Striche erlaubt."
 
 #: flaskbb/auth/forms.py:44
 msgid "Username or Email address"
-msgstr ""
+msgstr "Benutzername oder E-Mail Adresse"
 
 #: flaskbb/auth/forms.py:46
 msgid "Please enter your username or email address."
-msgstr ""
+msgstr "Bitte einen Benutzername oder eine E-Mail Adresse eingeben."
 
 #: flaskbb/auth/forms.py:51 flaskbb/auth/forms.py:83 flaskbb/auth/forms.py:107
 #: flaskbb/auth/forms.py:140 flaskbb/user/forms.py:89
 msgid "Password"
-msgstr ""
+msgstr "Passwort"
 
 #: flaskbb/auth/forms.py:52 flaskbb/auth/forms.py:108 flaskbb/user/forms.py:90
 msgid "Please enter your password."
-msgstr ""
+msgstr "Bitte ein Passwort eingeben."
 
 #: flaskbb/auth/forms.py:55
 msgid "Remember me"
-msgstr ""
+msgstr "Merken"
 
 #: flaskbb/auth/forms.py:57 flaskbb/templates/auth/login.html:1
 #: flaskbb/templates/auth/login.html:10 flaskbb/templates/layout.html:185
 msgid "Login"
-msgstr ""
+msgstr "Login"
 
 #: flaskbb/auth/forms.py:58 flaskbb/auth/forms.py:62 flaskbb/auth/forms.py:92
 #: flaskbb/auth/forms.py:123
 msgid "Captcha"
-msgstr ""
+msgstr "Captcha"
 
 #: flaskbb/auth/forms.py:67 flaskbb/auth/forms.py:154
 #: flaskbb/management/forms.py:84 flaskbb/templates/forum/memberlist.html:40
@@ -76,74 +77,74 @@ msgstr ""
 #: flaskbb/templates/management/banned_users.html:60
 #: flaskbb/templates/management/users.html:60
 msgid "Username"
-msgstr ""
+msgstr "Benutzername"
 
 #: flaskbb/auth/forms.py:69
 msgid "A valid username is required"
-msgstr ""
+msgstr "Ein gültiger Benutzername ist erforderlich"
 
 #: flaskbb/auth/forms.py:75 flaskbb/auth/forms.py:116 flaskbb/auth/forms.py:132
 #: flaskbb/auth/forms.py:162 flaskbb/management/forms.py:92
 msgid "Email address"
-msgstr ""
+msgstr "E-Mail Adresse"
 
 #: flaskbb/auth/forms.py:77 flaskbb/auth/forms.py:118 flaskbb/auth/forms.py:134
 #: flaskbb/auth/forms.py:164 flaskbb/management/forms.py:94
 #: flaskbb/user/forms.py:60
 msgid "A valid email address is required."
-msgstr ""
+msgstr "Eine gültige E-Mail Adresse ist erforderlich."
 
 #: flaskbb/auth/forms.py:78 flaskbb/auth/forms.py:165
 #: flaskbb/management/forms.py:95 flaskbb/user/forms.py:61
 #: flaskbb/user/forms.py:69 flaskbb/user/forms.py:74
 msgid "Invalid email address."
-msgstr ""
+msgstr "Ungültige E-Mail Adresse."
 
 #: flaskbb/auth/forms.py:86 flaskbb/auth/forms.py:143
 msgid "Passwords must match."
-msgstr ""
+msgstr "Die Passwörter müssen übereinstimmen."
 
 #: flaskbb/auth/forms.py:90 flaskbb/auth/forms.py:147
 msgid "Confirm password"
-msgstr ""
+msgstr "Passwort bestätigen"
 
 #: flaskbb/auth/forms.py:94 flaskbb/user/forms.py:48
 msgid "Language"
-msgstr ""
+msgstr "Sprache"
 
 #: flaskbb/auth/forms.py:97
 msgid "I accept the Terms of Service"
-msgstr ""
+msgstr "Ich akzeptiere die Allgemeinen Geschäftsbedingungen"
 
 #: flaskbb/auth/forms.py:98
 msgid "Please accept the TOS."
-msgstr ""
+msgstr "Die AGBs müssen akzeptiert werden."
 
 #: flaskbb/auth/forms.py:102 flaskbb/templates/auth/register.html:1
 #: flaskbb/templates/auth/register.html:10 flaskbb/templates/layout.html:208
 msgid "Register"
-msgstr ""
+msgstr "Registrieren"
 
 #: flaskbb/auth/forms.py:111 flaskbb/templates/auth/reauth.html:1
 #: flaskbb/templates/auth/reauth.html:10
 msgid "Refresh Login"
-msgstr ""
+msgstr "Login aktualisieren"
 
 #: flaskbb/auth/forms.py:125
 msgid "Request Password"
-msgstr ""
+msgstr "Passwort anforden"
 
 #: flaskbb/auth/forms.py:149
 msgid "Reset password"
-msgstr ""
+msgstr "Passwort zurücksetzen"
 
 #: flaskbb/auth/forms.py:156 flaskbb/management/forms.py:86
 msgid "A valid username is required."
-msgstr ""
+msgstr "Ein gültiger Benutzername ist erforderlich."
 
 #: flaskbb/auth/forms.py:169
 msgid "Send Confirmation Mail"
-msgstr ""
+msgstr "Bestätigungsmail senden"
 
 #: flaskbb/auth/forms.py:174
 msgid "Email confirmation token"
@@ -151,19 +152,19 @@ msgstr ""
 
 #: flaskbb/auth/forms.py:175
 msgid "Please enter the token we have sent to you."
-msgstr ""
+msgstr "Bitte geben Sie das Ihnen zugesandte Token ein."
 
 #: flaskbb/auth/forms.py:177
 msgid "Confirm Email"
-msgstr ""
+msgstr "E-Mail bestätigen"
 
 #: flaskbb/auth/views.py:73
 msgid "Logged out"
-msgstr ""
+msgstr "Ausgeloggt"
 
 #: flaskbb/auth/views.py:104
 msgid "Unrecoverable error while handling login"
-msgstr ""
+msgstr "Beim Anmelden ist ein nicht behebbarer Fehler aufgetreten"
 
 #: flaskbb/auth/views.py:130
 msgid "Reauthenticated."
@@ -3356,4 +3357,3 @@ msgstr ""
 
 #~ msgid "This account is already activated."
 #~ msgstr "Dieses Konto ist bereits aktiviert."
-
