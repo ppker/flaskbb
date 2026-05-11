@@ -84,7 +84,8 @@ class Login(MethodView):
     decorators = [anonymous_required]
 
     def __init__(
-        self, authentication_manager_factory: Callable[[], PluginAuthenticationManager]
+        self,
+        authentication_manager_factory: Callable[[], "PluginAuthenticationManager"],
     ):
         self.authentication_manager_factory = authentication_manager_factory
 
@@ -117,7 +118,7 @@ class Reauth(MethodView):
     form = ReauthForm
 
     def __init__(
-        self, reauthentication_factory: Callable[[], PluginReauthenticationManager]
+        self, reauthentication_factory: Callable[[], "PluginReauthenticationManager"]
     ):
         self.reauthentication_factory = reauthentication_factory
 
@@ -149,7 +150,9 @@ class Reauth(MethodView):
 class Register(MethodView):
     decorators = [anonymous_required, registration_enabled]
 
-    def __init__(self, registration_service_factory: Callable[[], RegistrationService]):
+    def __init__(
+        self, registration_service_factory: Callable[[], "RegistrationService"]
+    ):
         self.registration_service_factory = registration_service_factory
 
     def form(self):
@@ -203,7 +206,7 @@ class ForgotPassword(MethodView):
     form = ForgotPasswordForm
 
     def __init__(
-        self, password_reset_service_factory: Callable[[], ResetPasswordService]
+        self, password_reset_service_factory: Callable[[], "ResetPasswordService"]
     ):
         self.password_reset_service_factory = password_reset_service_factory
 
@@ -236,7 +239,7 @@ class ResetPassword(MethodView):
     form = ResetPasswordForm
 
     def __init__(
-        self, password_reset_service_factory: Callable[[], ResetPasswordService]
+        self, password_reset_service_factory: Callable[[], "ResetPasswordService"]
     ):
         self.password_reset_service_factory = password_reset_service_factory
 
@@ -282,7 +285,7 @@ class RequestActivationToken(MethodView):
     decorators = [requires_unactivated]
     form = RequestActivationForm
 
-    def __init__(self, account_activator_factory: Callable[[], AccountActivator]):
+    def __init__(self, account_activator_factory: Callable[[], "AccountActivator"]):
         self.account_activator_factory = account_activator_factory
 
     def get(self):
@@ -312,7 +315,7 @@ class RequestActivationToken(MethodView):
 class AutoActivateAccount(MethodView):
     decorators = [requires_unactivated]
 
-    def __init__(self, account_activator_factory: Callable[[], AccountActivator]):
+    def __init__(self, account_activator_factory: Callable[[], "AccountActivator"]):
         self.account_activator_factory = account_activator_factory
 
     def get(self, token: str):
@@ -353,7 +356,7 @@ class ActivateAccount(MethodView):
     decorators = [requires_unactivated]
     form = AccountActivationForm
 
-    def __init__(self, account_activator_factory: Callable[[], AccountActivator]):
+    def __init__(self, account_activator_factory: Callable[[], "AccountActivator"]):
         self.account_activator_factory = account_activator_factory
 
     def get(self):

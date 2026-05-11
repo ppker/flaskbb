@@ -11,11 +11,8 @@ Plugin Manager for FlaskBB
 
 import logging
 import string
-from importlib.metadata import PackageMetadata
-from typing import TYPE_CHECKING, TypeAlias, override
-
-if TYPE_CHECKING:
-    from importlib.metadata import Distribution
+from importlib.metadata import Distribution, PackageMetadata
+from typing import TypeAlias, override
 
 import pluggy
 from pluggy._manager import DistFacade

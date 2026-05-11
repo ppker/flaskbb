@@ -16,6 +16,7 @@ from typing import TYPE_CHECKING
 
 import attr
 from flask_babelplus import gettext as _
+from flask_sqlalchemy.session import Session
 from pytz import UTC
 from werkzeug.security import check_password_hash
 
@@ -31,8 +32,6 @@ from ...user.models import User
 from ...utils.helpers import time_utcnow
 
 if TYPE_CHECKING:
-    from flask_sqlalchemy.session import Session
-
     from flaskbb.plugins.manager import FlaskBBPluginManager
 
 logger = logging.getLogger(__name__)

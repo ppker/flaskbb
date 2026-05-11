@@ -30,6 +30,9 @@ devconfig:dependencies ## Generates a development config
 install:dependencies ## Installs the dependencies and FlaskBB
 	uv run flaskbb install
 
+upload: ## Uploads to PyPI
+	twine upload dist/{*.tar.gz,*.whl} --skip-existing
+
 docs: ## Builds the Sphinx docs
 	$(MAKE) -C docs html
 

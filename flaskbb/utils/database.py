@@ -16,6 +16,7 @@ import typing as t
 import sqlalchemy as sa
 import sqlalchemy.types as types
 from flask import abort
+from flask_sqlalchemy.session import Session
 from sqlalchemy.orm import (
     InstrumentedAttribute,
     Mapped,
@@ -28,8 +29,6 @@ from sqlalchemy.orm import (
 from flaskbb.extensions import db
 
 if t.TYPE_CHECKING:
-    from flask_sqlalchemy.session import Session
-
     from flaskbb.user.models import User
 
 from ..core.exceptions import PersistenceError

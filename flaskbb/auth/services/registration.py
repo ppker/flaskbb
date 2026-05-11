@@ -204,7 +204,7 @@ class RegistrationService(UserRegistrationService):
     reasons why the registration was prevented.
     """
 
-    def __init__(self, plugins: FlaskBBPluginManager, users: User, db: SQLAlchemy):
+    def __init__(self, plugins: "FlaskBBPluginManager", users: User, db: SQLAlchemy):
         self.plugins = plugins
         self.users = users
         self.db = db

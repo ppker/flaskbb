@@ -34,6 +34,7 @@ from flaskbb.utils.queries import hidden, paginate
 
 if TYPE_CHECKING:
     from flaskbb.user.models import Group, User
+
 from flaskbb.utils.database import (
     CRUDMixin,
     HideableCRUDMixin,
@@ -235,7 +236,7 @@ class Post(HideableCRUDMixin, db.Model):
     )
     modified_by: Mapped[str | None] = mapped_column(String(200), nullable=True)
 
-    user: Mapped[User] = relationship(
+    user: Mapped["User"] = relationship(
         "User",
         back_populates="posts",
         foreign_keys=[user_id],
@@ -553,7 +554,7 @@ class Topic(HideableCRUDMixin, db.Model):
         post_update=True,
     )
 
-    user: Mapped[User | None] = relationship(
+    user: Mapped["User | None"] = relationship(
         "User",
         back_populates="topics",
         foreign_keys=[user_id],
@@ -1033,7 +1034,7 @@ class Topic(HideableCRUDMixin, db.Model):
         else:
             logger.error("first post is None!")
 
-    def involved_users(self) -> list[User]:
+    def involved_users(self) -> list["User"]:
         """
         Returns all users involved in the topic
         """
@@ -1102,14 +1103,14 @@ class Forum(db.Model, CRUDMixin):
     )
 
     # Many-to-many
-    moderators: Mapped[list[User]] = relationship(
+    moderators: Mapped[list["User"]] = relationship(
         "User",
         secondary=moderators,
         primaryjoin=(moderators.c.forum_id == id),
         backref=db.backref("forummoderator", lazy="dynamic"),
         lazy="joined",
     )
-    groups: Mapped[list[Group]] = relationship(
+    groups: Mapped[list["Group"]] = relationship(
         "Group",
         secondary=forumgroups,
         primaryjoin=(forumgroups.c.forum_id == id),
@@ -1174,7 +1175,7 @@ class Forum(db.Model, CRUDMixin):
             db.session.commit()
 
     def update_read(
-        self, user: User, forumsread: ForumsRead | None, topicsread: TopicsRead | None
+        self, user: "User", forumsread: ForumsRead | None, topicsread: TopicsRead | None
     ):
         """Updates the ForumsRead status for the user. In order to work
         correctly, be sure that `topicsread is **not** `None`.
@@ -1302,7 +1303,7 @@ class Forum(db.Model, CRUDMixin):
         return self
 
     @override
-    def save(self, groups: Group | None = None):
+    def save(self, groups: "Group | None" = None):
         """Saves a forum
 
         :param moderators: If given, it will update the moderators in this
@@ -1328,7 +1329,7 @@ class Forum(db.Model, CRUDMixin):
         return self
 
     @override
-    def delete(self, users: list[User] | None = None):
+    def delete(self, users: list["User"] | None = None):
         """Deletes forum. If a list with involved user objects is passed,
         it will also update their post counts
 
@@ -1363,7 +1364,7 @@ class Forum(db.Model, CRUDMixin):
 
     # Classmethods
     @classmethod
-    def get_forum(cls, forum_id: int, user: User):
+    def get_forum(cls, forum_id: int, user: "User"):
         """Returns the forum and forumsread object as a tuple for the user.
 
         :param forum_id: The forum id
@@ -1399,7 +1400,7 @@ class Forum(db.Model, CRUDMixin):
         return forum, forumsread
 
     @classmethod
-    def get_topics(cls, forum_id: int, user: User, page: int = 1, per_page: int = 20):
+    def get_topics(cls, forum_id: int, user: "User", page: int = 1, per_page: int = 20):
         """Get the topics for the forum. If the user is logged in,
         it will perform an outerjoin for the topics with the topicsread and
         forumsread relation to check if it is read or unread.

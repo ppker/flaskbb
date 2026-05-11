@@ -449,7 +449,7 @@ def crop_title(title: str, length: int | None = None, suffix: str = "..."):
     return title[:length].rsplit(" ", 1)[0] + suffix
 
 
-def is_online(user: User):
+def is_online(user: "User"):
     """A simple check to see if the user was online within a specified
     time range
 
@@ -847,7 +847,7 @@ class ReverseProxyPathFix(object):
 
 
 @overload
-def real(obj: LocalProxy[T]) -> User: ...
+def real(obj: LocalProxy[T]) -> "User": ...
 
 
 @overload
