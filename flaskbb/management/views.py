@@ -12,9 +12,19 @@ This module handles the management views.
 import importlib.metadata
 import logging
 import sys
+from typing import Any
 
 from celery import __version__ as celery_version
-from flask import Blueprint, current_app, flash, jsonify, redirect, request, url_for
+from flask import (
+    Blueprint,
+    Flask,
+    current_app,
+    flash,
+    jsonify,
+    redirect,
+    request,
+    url_for,
+)
 from flask.views import MethodView
 from flask_allows2 import Not, Permission
 from flask_babelplus import gettext as _
@@ -62,6 +72,8 @@ impl = HookimplMarker("flaskbb")
 
 logger = logging.getLogger(__name__)
 
+PROTECTED_GROUP_ID = 6
+
 
 class ManagementSettings(MethodView):
     decorators = [
@@ -75,7 +87,7 @@ class ManagementSettings(MethodView):
         )
     ]
 
-    def _determine_active_settings(self, slug, plugin):
+    def _determine_active_settings(self, slug: str | None, plugin: str | None):
         """Determines which settings are active.
         Returns a tuple in following order:
             ``form``, ``old_settings``, ``plugin_obj``, ``active_nav``
@@ -100,7 +112,7 @@ class ManagementSettings(MethodView):
 
         return form, old_settings, plugin_obj, active_nav
 
-    def get(self, slug=None, plugin=None):
+    def get(self, slug: str | None = None, plugin: str | None = None):
         form, old_settings, plugin_obj, active_nav = self._determine_active_settings(
             slug, plugin
         )
@@ -120,7 +132,7 @@ class ManagementSettings(MethodView):
             active_nav=active_nav,
         )
 
-    def post(self, slug=None, plugin=None):
+    def post(self, slug: str | None = None, plugin: str | None = None):
         form, old_settings, plugin_obj, active_nav = self._determine_active_settings(
             slug, plugin
         )
@@ -209,7 +221,7 @@ class EditUser(MethodView):
     ]
     form = EditUserForm
 
-    def get(self, user_id):
+    def get(self, user_id: int):
         user = User.get_by_or_404(id=user_id)
         form = self.form(user)
         member_group = db.and_(
@@ -239,7 +251,7 @@ class EditUser(MethodView):
             "management/user_form.html", form=form, title=_("Edit User")
         )
 
-    def post(self, user_id):
+    def post(self, user_id: int):
         user = User.get_by_or_404(id=user_id)
 
         member_group = db.and_(
@@ -295,7 +307,7 @@ class DeleteUser(MethodView):
         )
     ]
 
-    def post(self, user_id=None):
+    def post(self, user_id: int | None = None):
         # ajax request
         json = request.get_json(silent=True)
         if json is not None:
@@ -436,7 +448,7 @@ class BanUser(MethodView):
         )
     ]
 
-    def post(self, user_id=None):
+    def post(self, user_id: int | None = None):
         if not Permission(CanBanUser, identity=current_user):
             flash(_("You do not have the permissions to ban this user."), "danger")
             return redirect(url_for("management.overview"))
@@ -508,7 +520,7 @@ class UnbanUser(MethodView):
         )
     ]
 
-    def post(self, user_id=None):
+    def post(self, user_id: int | None = None):
         if not Permission(CanBanUser, identity=current_user):
             flash(_("You do not have the permissions to unban this user."), "danger")
             return redirect(url_for("management.overview"))
@@ -619,14 +631,14 @@ class EditGroup(MethodView):
     ]
     form = EditGroupForm
 
-    def get(self, group_id):
+    def get(self, group_id: int):
         group = Group.get_by_or_404(id=group_id)
         form = self.form(group)
         return render_template(
             "management/group_form.html", form=form, title=_("Edit Group")
         )
 
-    def post(self, group_id):
+    def post(self, group_id: int):
         group = Group.get_by_or_404(id=group_id)
         form = EditGroupForm(group)
 
@@ -657,43 +669,50 @@ class DeleteGroup(MethodView):
         )
     ]
 
-    def post(self, group_id=None):
+    def post(self, group_id: int | None = None):
         json = request.get_json(silent=True)
         if json is not None:
-            ids = json.get("ids")
+            ids: list[Any] = json.get("ids", [])
             if not ids:
                 return jsonify(message="No ids provided.", category="error", status=404)
 
-            # TODO: Get rid of magic numbers
-            if not (set(ids) & set(["1", "2", "3", "4", "5", "6"])):
-                data = []
-                for group in Group.get_all(Group.id.in_(ids)):
-                    group.delete()
-                    data.append(
-                        {
-                            "id": group.id,
-                            "type": "delete",
-                            "reverse": False,
-                            "reverse_name": None,
-                            "reverse_url": None,
-                        }
-                    )
-
+            try:
+                id_list = [int(id) for id in ids]
+            except (ValueError, TypeError):
                 return jsonify(
-                    message="{} groups deleted.".format(len(data)),
-                    category="success",
-                    data=data,
-                    status=200,
+                    message="No valid ids provided.", category="error", status=404
                 )
+
+            if any(id <= PROTECTED_GROUP_ID for id in id_list):
+                return jsonify(
+                    message=_("You cannot delete one of the standard groups."),
+                    category="danger",
+                    data=None,
+                    status=404,
+                )
+
+            data = []
+            for group in Group.get_all(Group.id.in_(id_list)):
+                group.delete()
+                data.append(
+                    {
+                        "id": group.id,
+                        "type": "delete",
+                        "reverse": False,
+                        "reverse_name": None,
+                        "reverse_url": None,
+                    }
+                )
+
             return jsonify(
-                message=_("You cannot delete one of the standard groups."),
-                category="danger",
-                data=None,
-                status=404,
+                message="{} groups deleted.".format(len(data)),
+                category="success",
+                data=data,
+                status=200,
             )
 
         if group_id is not None:
-            if group_id <= 6:  # there are 6 standard groups
+            if group_id <= PROTECTED_GROUP_ID:  # there are 6 standard groups
                 flash(
                     _(
                         "You cannot delete the standard groups. "
@@ -1217,7 +1236,7 @@ class EnablePlugin(MethodView):
         )
     ]
 
-    def post(self, name):
+    def post(self, name: str):
         validate_plugin(name)
         plugin = PluginRegistry.get_by_or_404(name=name)
 
@@ -1252,7 +1271,7 @@ class DisablePlugin(MethodView):
         )
     ]
 
-    def post(self, name):
+    def post(self, name: str):
         validate_plugin(name)
         plugin = PluginRegistry.get_by_or_404(name=name)
 
@@ -1286,7 +1305,7 @@ class UninstallPlugin(MethodView):
         )
     ]
 
-    def post(self, name):
+    def post(self, name: str):
         validate_plugin(name)
         plugin = PluginRegistry.get_by_or_404(name=name)
         PluginStore.query.filter_by(plugin_id=plugin.id).delete()
@@ -1307,7 +1326,7 @@ class InstallPlugin(MethodView):
         )
     ]
 
-    def post(self, name):
+    def post(self, name: str):
         plugin_module = validate_plugin(name)
         plugin = PluginRegistry.get_by_or_404(name=name)
 
@@ -1327,7 +1346,7 @@ class InstallPlugin(MethodView):
 
 
 @impl(tryfirst=True)
-def flaskbb_load_blueprints(app):
+def flaskbb_load_blueprints(app: Flask):
     management = Blueprint("management", __name__)
 
     @management.before_request
