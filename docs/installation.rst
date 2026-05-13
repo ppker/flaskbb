@@ -210,7 +210,7 @@ variable.
 ::
 
     RATELIMIT_ENABLED = True
-    RATELIMIT_STORAGE_URL = REDIS_URL
+    RATELIMIT_STORAGE_URI = REDIS_URL
 
 
 Mail Examples

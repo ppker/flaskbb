@@ -226,7 +226,7 @@ class DefaultConfig(object):
     # Using the redis storage requires the installation of the redis package,
     # which will be installed if you enable REDIS_ENABLE while memcached
     # relies on the pymemcache package.
-    # RATELIMIT_STORAGE_URL = "redis://localhost:6379"
+    # RATELIMIT_STORAGE_URI = "redis://localhost:6379"
 
     # Caching
     # ------------------------------
