@@ -156,6 +156,14 @@ def do_topic_action(
         IsAtleastModeratorInForum,
     )
 
+    forum_ids = set(topic.forum_id for topic in topics)
+    if len(forum_ids) > 1:
+        flash(
+            _("Please modify topics in only one forum at a time."),
+            "danger",
+        )
+        return False
+
     if not Permission(IsAtleastModeratorInForum(forum=topics[0].forum)):
         flash(
             _("You do not have the permissions to execute this action."),
