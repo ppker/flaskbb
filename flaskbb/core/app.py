@@ -16,7 +16,8 @@ from flask.config import Config
 from typing_extensions import TypedDict
 
 
-class AppConfig(TypedDict, extra_items=Any):
+# mypy 2.3 has no PEP 728 support
+class AppConfig(TypedDict, extra_items=Any):  # type: ignore[call-arg]
     # Flask
     DEBUG: bool
     TESTING: bool
@@ -116,7 +117,7 @@ class FlaskBB(Flask):
     the context local.
     """
 
-    config: AppConfig
+    config: AppConfig  # type: ignore[assignment]
 
     @property
     def raw_config(self) -> Config:
@@ -127,4 +128,4 @@ class FlaskBB(Flask):
         ``from_pyfile``, ``get_namespace`` or writes under a key that isn't
         known statically has to go through this.
         """
-        return cast(Config, self.config)
+        return cast(Config, self.config)  # pyright: ignore[reportInvalidCast]
