@@ -17,7 +17,6 @@ from datetime import datetime, UTC
 from typing import Any, override
 
 import click
-from flask import current_app
 from flask.cli import FlaskGroup, ScriptInfo, with_appcontext
 from jinja2 import Environment, FileSystemLoader
 
@@ -40,6 +39,7 @@ from flaskbb.utils.populate import (
     insert_bulk_data,
     run_plugin_migrations,
 )
+from flaskbb.utils.proxies import current_app
 from flaskbb.utils.translations import compile_translations
 
 logger = logging.getLogger(__name__)

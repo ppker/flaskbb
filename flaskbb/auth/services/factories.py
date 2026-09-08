@@ -11,7 +11,7 @@ These factories are provisional.
 
 from datetime import timedelta
 
-from flask import current_app
+from flaskbb.utils.proxies import current_app
 
 from ...extensions import db, pluggy
 from ...tokens import FlaskBBTokenSerializer
@@ -30,7 +30,7 @@ def registration_service_factory():
 
 def reset_service_factory():
     token_serializer = FlaskBBTokenSerializer(
-        current_app.config["SECRET_KEY"],  # pyright: ignore[reportUnknownArgumentType]
+        current_app.config["SECRET_KEY"],
         expiry=timedelta(hours=1),
     )
     verifiers = [EmailMatchesUserToken(User)]
@@ -39,7 +39,7 @@ def reset_service_factory():
 
 def account_activator_factory():
     token_serializer = FlaskBBTokenSerializer(
-        current_app.config["SECRET_KEY"],  # pyright: ignore[reportUnknownArgumentType]
+        current_app.config["SECRET_KEY"],
         expiry=timedelta(hours=1),
     )
     return AccountActivator(token_serializer, User)

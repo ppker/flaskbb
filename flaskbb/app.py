@@ -16,12 +16,13 @@ import time
 import warnings
 from collections.abc import Callable, Sequence
 from datetime import datetime, UTC
+from email.utils import formataddr
 from types import ModuleType
 from typing import Any, cast
 
 import sqlalchemy as sa
 from celery import Celery
-from flask import flash, Flask, redirect, request, url_for
+from flask import flash, redirect, request, url_for
 from flask_babelplus import gettext as _
 from jinja2.filters import do_filesizeformat
 from sqlalchemy import event
@@ -29,13 +30,7 @@ from sqlalchemy.engine import Connection, Engine
 from sqlalchemy.exc import OperationalError, ProgrammingError
 from werkzeug.exceptions import Forbidden, InternalServerError, NotFound, RequestEntityTooLarge
 
-from flaskbb.core.settings import (
-    fixture as fixture,
-)
-from flaskbb.core.settings import (
-    flaskbb_config,
-    setting_registry,
-)
+from flaskbb.core.app import FlaskBB
 from flaskbb.extensions import (
     alembic,
     allows,
@@ -57,6 +52,13 @@ from flaskbb.plugins import spec
 from flaskbb.plugins.models import PluginRegistry
 from flaskbb.plugins.utils import remove_zombie_plugins_from_db, template_hook
 from flaskbb.search.service import search_snippet
+from flaskbb.settings import (
+    fixture as fixture,
+)
+from flaskbb.settings import (
+    flaskbb_config,
+    setting_registry,
+)
 
 # models
 from flaskbb.user.models import Guest, User
@@ -129,7 +131,7 @@ def create_app(config: object | None = None, instance_path: str | None = None):
                    config named ``flaskbb.cfg`` from the instance path.
     """
 
-    app = Flask("flaskbb", instance_path=instance_path, instance_relative_config=True)
+    app = FlaskBB("flaskbb", instance_path=instance_path, instance_relative_config=True)
 
     # instance folders are not automatically created by flask
     if not os.path.exists(app.instance_path):
@@ -159,18 +161,18 @@ def create_app(config: object | None = None, instance_path: str | None = None):
     return app
 
 
-def configure_app(app: Flask, config: Any):
+def configure_app(app: FlaskBB, config: Any):
     """Configures FlaskBB."""
     # Use the default config and override it afterwards
-    app.config.from_object("flaskbb.configs.default.DefaultConfig")
+    app.raw_config.from_object("flaskbb.configs.default.DefaultConfig")
     config = get_flaskbb_config(app, config)
     # Path
     if isinstance(config, str):
-        app.config.from_pyfile(config)
+        app.raw_config.from_pyfile(config)
     # Module
     else:
         # try to update the config from the object
-        app.config.from_object(config)
+        app.raw_config.from_object(config)
 
     # Add the location of the config to the config
     app.config["CONFIG_PATH"] = config
@@ -181,7 +183,7 @@ def configure_app(app: Flask, config: Any):
     app_config_from_env(app, prefix="FLASKBB_")
 
     # Migrate Celery 4.x config to Celery 6.x
-    old_celery_config = app.config.get_namespace("CELERY_")
+    old_celery_config = app.raw_config.get_namespace("CELERY_")
     celery_config = {}
     for key, value in old_celery_config.items():
         # config is the new format
@@ -189,13 +191,13 @@ def configure_app(app: Flask, config: Any):
             config_key = f"CELERY_{key.upper()}"
             celery_config[key] = value
             try:
-                del app.config[config_key]
+                del app.raw_config[config_key]
             except KeyError:
                 pass
 
     # merge the new config with the old one
     new_celery_config = app.config["CELERY_CONFIG"]
-    new_celery_config.update(celery_config)
+    new_celery_config.update(celery_config)  # pyright: ignore[reportUnknownArgumentType]
     app.config.update({"CELERY_CONFIG": new_celery_config})
 
     # Setting up logging as early as possible
@@ -209,7 +211,7 @@ def configure_app(app: Flask, config: Any):
 
     logger.info(f"Using config from: {config_name}")
 
-    deprecation_level = app.config.get("DEPRECATION_LEVEL", "default")
+    deprecation_level = cast("Any", app.config.get("DEPRECATION_LEVEL", "default"))
 
     # never set the deprecation level during testing, pytest will handle it
     if not app.testing:  # pragma: no branch
@@ -237,7 +239,7 @@ def configure_app(app: Flask, config: Any):
             "for more information about these configuration variables."
         )
 
-    debug_panels = app.config.setdefault(
+    app.config.setdefault(
         "DEBUG_TB_PANELS",
         [
             "flask_debugtoolbar.panels.versions.VersionDebugPanel",
@@ -253,31 +255,31 @@ def configure_app(app: Flask, config: Any):
         ],
     )
 
-    if all("WarningsPanel" not in p for p in debug_panels):
-        debug_panels.append("flask_debugtoolbar_warnings.WarningsPanel")
+    if all("WarningsPanel" not in p for p in app.config["DEBUG_TB_PANELS"]):
+        app.config["DEBUG_TB_PANELS"].append("flask_debugtoolbar_warnings.WarningsPanel")
 
     create_upload_directory(app)
 
 
-def configure_celery_app(app: Flask, celery: Celery):
+def configure_celery_app(app: FlaskBB, celery: Celery):
     """Configures the celery app."""
-    celery.conf.update(app.config.get("CELERY_CONFIG"))
+    celery.conf.update(app.config.get("CELERY_CONFIG"))  # pyright: ignore[reportUnknownMemberType]
 
-    TaskBase = celery.Task
+    TaskBase = celery.Task  # pyright: ignore[reportUnknownMemberType, reportUnknownVariableType]
 
-    class ContextTask(TaskBase):  # type: ignore[valid-type,misc]
-        def __call__(self, *args, **kwargs):
+    class ContextTask(TaskBase):  # type: ignore[valid-type,misc]  # pyright: ignore[reportUntypedBaseClass]
+        def __call__(self, *args: Any, **kwargs: Any):  # pyright: ignore[reportUnknownParameterType]
             with app.app_context():
-                return TaskBase.__call__(self, *args, **kwargs)
+                return TaskBase.__call__(self, *args, **kwargs)  # pyright: ignore[reportUnknownMemberType, reportUnknownVariableType]
 
     celery.Task = ContextTask
 
 
-def configure_blueprints(app: Flask):
+def configure_blueprints(app: FlaskBB):
     pluggy.hook.flaskbb_load_blueprints(app=app)
 
 
-def configure_extensions(app: Flask):
+def configure_extensions(app: FlaskBB):
     """Configures the extensions."""
     # Flask-Allows
     allows.init_app(app)
@@ -311,8 +313,9 @@ def configure_extensions(app: Flask):
     limiter.init_app(app)
 
     # Flask-Login
-    login_manager.login_view = app.config["LOGIN_VIEW"]
-    login_manager.refresh_view = app.config["REAUTH_VIEW"]
+    # flask_login infers both as None from their initializers
+    login_manager.login_view = app.config["LOGIN_VIEW"]  # pyright: ignore[reportAttributeAccessIssue]
+    login_manager.refresh_view = app.config["REAUTH_VIEW"]  # pyright: ignore[reportAttributeAccessIssue]
     login_manager.login_message_category = app.config["LOGIN_MESSAGE_CATEGORY"]
     login_manager.needs_refresh_message_category = app.config["REFRESH_MESSAGE_CATEGORY"]
     login_manager.anonymous_user = Guest
@@ -327,7 +330,7 @@ def configure_extensions(app: Flask):
     login_manager.init_app(app)
 
 
-def configure_search_backend(app: Flask):
+def configure_search_backend(app: FlaskBB):
     """Resolves and initializes the configured search backend. Runs after
     load_plugins() so backends contributed by plugins via the
     flaskbb_load_search_backends hook are available for selection.
@@ -335,7 +338,7 @@ def configure_search_backend(app: Flask):
     flaskbb_search.init_app(app)
 
 
-def configure_template_filters(app: Flask):
+def configure_template_filters(app: FlaskBB):
     """Configures the template filters."""
     filters: dict[str, Callable[..., Any]] = {}
 
@@ -379,7 +382,7 @@ def configure_template_filters(app: Flask):
     pluggy.hook.flaskbb_jinja_directives(app=app)
 
 
-def configure_context_processors(app: Flask):
+def configure_context_processors(app: FlaskBB):
     """Configures the context processors."""
 
     @app.context_processor
@@ -395,7 +398,7 @@ def configure_context_processors(app: Flask):
         return dict(now=datetime.now(UTC))
 
 
-def configure_before_handlers(app: Flask):
+def configure_before_handlers(app: FlaskBB):
     """Configures the before request handlers."""
 
     @app.before_request
@@ -419,7 +422,7 @@ def configure_before_handlers(app: Flask):
     pluggy.hook.flaskbb_request_processors(app=app)
 
 
-def configure_errorhandlers(app: Flask):
+def configure_errorhandlers(app: FlaskBB):
     """Configures the error handlers."""
 
     @app.errorhandler(403)
@@ -451,7 +454,7 @@ def configure_errorhandlers(app: Flask):
     pluggy.hook.flaskbb_errorhandlers(app=app)
 
 
-def configure_migrations(app: Flask):
+def configure_migrations(app: FlaskBB):
     """Configure migrations."""
     plugin_dirs = pluggy.hook.flaskbb_load_migrations()
     version_locations = get_alembic_locations(plugin_dirs)
@@ -459,7 +462,7 @@ def configure_migrations(app: Flask):
     app.config["ALEMBIC"]["version_locations"] = version_locations
 
 
-def configure_translations(app: Flask):
+def configure_translations(app: FlaskBB):
     """Configure translations."""
 
     # we have to initialize the extension after we have loaded the plugins
@@ -475,13 +478,14 @@ def configure_translations(app: Flask):
         return flaskbb_config["DEFAULT_LANGUAGE"]
 
 
-def configure_logging(app: Flask):
+def configure_logging(app: FlaskBB):
     """Configures logging."""
     if app.config.get("USE_DEFAULT_LOGGING"):
         configure_default_logging(app)
 
-    if app.config.get("LOG_CONF_FILE"):
-        logging.config.fileConfig(app.config["LOG_CONF_FILE"], disable_existing_loggers=False)
+    log_conf_file = app.config["LOG_CONF_FILE"]
+    if log_conf_file:
+        logging.config.fileConfig(log_conf_file, disable_existing_loggers=False)
 
     if app.config["SQLALCHEMY_ECHO"]:
         # Ref: http://stackoverflow.com/a/8428546
@@ -509,7 +513,7 @@ def configure_logging(app: Flask):
             app.logger.debug("Total Time: %f", total)
 
 
-def configure_default_logging(app: Flask):
+def configure_default_logging(app: FlaskBB):
     # Load default logging config
     logging.config.dictConfig(app.config["LOG_DEFAULT_CONF"])
 
@@ -517,14 +521,17 @@ def configure_default_logging(app: Flask):
         configure_mail_logs(app)
 
 
-def configure_mail_logs(app: Flask, formatter: logging.Formatter | None = None):
+def configure_mail_logs(app: FlaskBB, formatter: logging.Formatter | None = None):
     from logging.handlers import SMTPHandler
 
     if formatter is None:
         formatter = logging.Formatter("%(asctime)s %(levelname)-7s %(name)-25s %(message)s")
+    # MAIL_DEFAULT_SENDER may be a (name, address) pair, SMTPHandler wants a
+    # single From header value
+    sender = app.config["MAIL_DEFAULT_SENDER"]
     mail_handler = SMTPHandler(
         app.config["MAIL_SERVER"],
-        app.config["MAIL_DEFAULT_SENDER"],
+        sender if isinstance(sender, str) else formataddr(sender),
         app.config["ADMINS"],
         "application error, no admins specified",
         (app.config["MAIL_USERNAME"], app.config["MAIL_PASSWORD"]),
@@ -535,7 +542,7 @@ def configure_mail_logs(app: Flask, formatter: logging.Formatter | None = None):
     app.logger.addHandler(mail_handler)
 
 
-def load_plugins(app: Flask):
+def load_plugins(app: FlaskBB):
     pluggy.add_hookspecs(spec)
 
     # have to find all the flaskbb modules that are loaded this way
@@ -595,11 +602,11 @@ def load_plugins(app: Flask):
 
     # we need a copy of it because of
     # RuntimeError: dictionary changed size during iteration
-    tasks = celery.tasks.copy()
+    tasks = celery.tasks.copy()  # pyright: ignore[reportUnknownMemberType, reportUnknownVariableType]
     disabled_plugins = [
         p.__package__ for p in pluggy.list_disabled_plugins() if isinstance(p, ModuleType)
     ]
-    for task_name, task in tasks.items():
-        if task.__module__.split(".")[0] in disabled_plugins:
+    for task_name, task in tasks.items():  # pyright: ignore[reportUnknownMemberType, reportUnknownVariableType]
+        if task.__module__.split(".")[0] in disabled_plugins:  # pyright: ignore[reportUnknownMemberType]
             logger.debug(f"Unregistering task: '{task}'")
-            celery.tasks.unregister(task_name)
+            celery.tasks.unregister(task_name)  # pyright: ignore[reportUnknownMemberType]

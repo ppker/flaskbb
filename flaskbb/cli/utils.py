@@ -23,7 +23,7 @@ from click._compat import get_text_stderr
 from flask_themes2 import get_theme
 from jinja2 import Template
 
-from flaskbb import __version__
+from flaskbb._version import __version__
 from flaskbb.extensions import db, pluggy
 from flaskbb.fixtures.groups import fixture
 from flaskbb.user.models import Group, Guest, User

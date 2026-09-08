@@ -13,10 +13,10 @@ from flaskbb.forum.models import (
     Topic,
     TopicsRead,
 )
+from flaskbb.settings import flaskbb_config
 from flaskbb.user.models import User
 from flaskbb.utils.helpers import CategoryForums, ForumRow
 from flaskbb.utils.queries import hidden
-from flaskbb.utils.settings import flaskbb_config
 from sqlalchemy import select
 
 

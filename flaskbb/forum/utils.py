@@ -23,8 +23,8 @@ from werkzeug.utils import secure_filename
 from wtforms import Field, SelectMultipleField, widgets
 from wtforms.validators import Optional, ValidationError
 
-from flaskbb.core.settings import flaskbb_config
 from flaskbb.extensions import db, login_manager
+from flaskbb.settings import flaskbb_config
 from flaskbb.utils.proxies import current_user
 from flaskbb.utils.requirements import CanPostAttachment
 from flaskbb.utils.uploads import (

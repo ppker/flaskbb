@@ -1,6 +1,6 @@
 """
-flaskbb.core.settings.forms
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+flaskbb.settings.forms
+~~~~~~~~~~~~~~~~~~~~~~
 
 Auto-generates a Flask-WTF form class for a given SettingGroup
 

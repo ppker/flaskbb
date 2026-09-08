@@ -1,4 +1,4 @@
-from flaskbb.core.settings.proxy import FlaskBBConfigProxy
+from flaskbb.settings.proxy import FlaskBBConfigProxy
 
 
 def test_flaskbb_config(default_settings):

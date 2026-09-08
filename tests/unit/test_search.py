@@ -2,15 +2,15 @@ import importlib.util
 from pathlib import Path
 
 import pytest
-from flaskbb.core.search import FlaskBBSearch, SearchBackendRegistration
-from flaskbb.core.search.backends.postgresql import PostgreSQLSearchBackend
-from flaskbb.core.search.backends.sql import SQLSearchBackend
-from flaskbb.core.search.backends.sqlite import SQLiteSearchBackend
-from flaskbb.core.search.base import ordered_by_ids, SearchBackend
-from flaskbb.core.settings import flaskbb_config
 from flaskbb.extensions import db, pluggy
 from flaskbb.forum.models import Forum, Post, Topic
 from flaskbb.plugins.models import PluginRegistry
+from flaskbb.search import FlaskBBSearch, SearchBackendRegistration
+from flaskbb.search.backends.postgresql import PostgreSQLSearchBackend
+from flaskbb.search.backends.sql import SQLSearchBackend
+from flaskbb.search.backends.sqlite import SQLiteSearchBackend
+from flaskbb.search.base import ordered_by_ids, SearchBackend
+from flaskbb.settings import flaskbb_config
 from flaskbb.user.models import User
 from flaskbb.utils.database import drop_all
 from pluggy import HookimplMarker

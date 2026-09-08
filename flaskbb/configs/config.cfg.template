@@ -88,7 +88,7 @@ REMEMBER_COOKIE_HTTPONLY = True
 # ------------------------------
 # Which search backend to use. "sql" (the default) needs no extra
 # dependency or index storage; it searches directly against the
-# database via ILIKE. See flaskbb/core/search/ for available backends.
+# database via ILIKE. See flaskbb/search/ for available backends.
 SEARCH_BACKEND = "sql"
 
 

@@ -35,8 +35,8 @@ from ...core.exceptions import (
     StopValidation,
     ValidationError,
 )
-from ...core.settings.proxy import FlaskBBConfigProxy
 from ...extensions import db
+from ...settings.proxy import FlaskBBConfigProxy
 from ...user.models import User
 
 __all__ = (

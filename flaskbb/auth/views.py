@@ -14,7 +14,7 @@ from collections.abc import Callable
 from datetime import datetime, timedelta, UTC
 from typing import TYPE_CHECKING
 
-from flask import Blueprint, flash, Flask, redirect, request, url_for
+from flask import Blueprint, flash, redirect, request, url_for
 from flask.views import MethodView
 from flask_babelplus import gettext as _
 from flask_login import (
@@ -35,8 +35,9 @@ from flaskbb.auth.forms import (
     RequestActivationForm,
     ResetPasswordForm,
 )
-from flaskbb.core.settings import flaskbb_config
+from flaskbb.core.app import FlaskBB
 from flaskbb.extensions import db, limiter, pluggy
+from flaskbb.settings import flaskbb_config
 from flaskbb.utils.helpers import (
     anonymous_required,
     format_timedelta,
@@ -421,7 +422,7 @@ def login_rate_limit_message():
 
 
 @impl(tryfirst=True)
-def flaskbb_load_blueprints(app: Flask):
+def flaskbb_load_blueprints(app: FlaskBB):
     auth = Blueprint("auth", __name__)
 
     @auth.before_request

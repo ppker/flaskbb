@@ -17,9 +17,7 @@ import sqlalchemy as sa
 from flask import (
     abort,
     Blueprint,
-    current_app,
     flash,
-    Flask,
     redirect,
     request,
     url_for,
@@ -30,7 +28,7 @@ from flask_babelplus import gettext as _
 from flask_login import login_required
 from pluggy import HookimplMarker
 
-from flaskbb.core.settings import flaskbb_config
+from flaskbb.core.app import FlaskBB
 from flaskbb.extensions import allows, db, pluggy
 from flaskbb.forum.forms import (
     EditTopicForm,
@@ -50,6 +48,7 @@ from flaskbb.forum.models import (
     topictracker,
 )
 from flaskbb.markup import make_renderer
+from flaskbb.settings import flaskbb_config
 from flaskbb.user.models import User
 from flaskbb.utils.helpers import (
     do_topic_action,
@@ -63,7 +62,7 @@ from flaskbb.utils.helpers import (
     time_diff,
     time_utcnow,
 )
-from flaskbb.utils.proxies import current_user
+from flaskbb.utils.proxies import current_app, current_user
 from flaskbb.utils.queries import first_or_404, paginate
 from flaskbb.utils.requirements import (
     CanAccessForum,
@@ -1121,7 +1120,7 @@ class MarkdownPreview(MethodView):
 
 
 @impl(tryfirst=True)
-def flaskbb_load_blueprints(app: Flask):
+def flaskbb_load_blueprints(app: FlaskBB):
     forum = Blueprint("forum", __name__)
     register_view(
         forum,

@@ -1,6 +1,6 @@
 """
-flaskbb.core.settings.proxy
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+flaskbb.settings.proxy
+~~~~~~~~~~~~~~~~~~~~~~
 This module contains the proxy for the settings.
 Supports both:
     flaskbb_config.USERS_PER_PAGE      # attribute access, autocompletes

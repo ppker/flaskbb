@@ -1,6 +1,6 @@
 """
-flaskbb.core.settings.definitions
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+flaskbb.settings.definitions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This modules holds the Type definitions for the settings.
 

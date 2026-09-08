@@ -39,8 +39,8 @@ from pygments.formatters import HtmlFormatter
 from pygments.lexers import get_lexer_by_name
 from pygments.util import ClassNotFound
 
-from flaskbb.core.settings import flaskbb_config
 from flaskbb.extensions import pluggy
+from flaskbb.settings import flaskbb_config
 from flaskbb.utils.proxies import current_user
 
 impl = HookimplMarker("flaskbb")

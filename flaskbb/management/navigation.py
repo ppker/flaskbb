@@ -14,7 +14,6 @@ from flask import request
 from flask_allows2 import Permission
 from flask_babelplus import gettext as _
 
-from flaskbb.core.settings.registry import setting_registry
 from flaskbb.display.navigation import (
     NavigationHeader,
     NavigationItem,
@@ -23,6 +22,7 @@ from flaskbb.display.navigation import (
 )
 from flaskbb.extensions import pluggy
 from flaskbb.plugins.models import PluginRegistry
+from flaskbb.settings.registry import setting_registry
 from flaskbb.utils.requirements import IsAdmin
 
 if TYPE_CHECKING:

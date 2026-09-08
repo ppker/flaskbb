@@ -502,7 +502,7 @@ install/uninstall/enable/disable workflow.
 .. describe:: upgrade [PLUGIN_NAME]
 
     Upgrades a plugin's settings to match its currently registered
-    :class:`~flaskbb.core.settings.definitions.SettingGroup` and applies
+    :class:`~flaskbb.settings.definitions.SettingGroup` and applies
     its newest migrations - use this after upgrading a plugin whose
     settings or database schema changed between versions.
 

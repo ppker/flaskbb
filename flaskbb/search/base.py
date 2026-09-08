@@ -1,6 +1,6 @@
 """
-flaskbb.core.search.base
-~~~~~~~~~~~~~~~~~~~~~~~~
+flaskbb.search.base
+~~~~~~~~~~~~~~~~~~~
 
 The pluggable search backend abstraction. A backend owns three
 responsibilities:
@@ -26,7 +26,7 @@ from sqlalchemy import case, inspect, Select, select
 from sqlalchemy import false as sql_false
 
 if TYPE_CHECKING:
-    # importing at runtime would close the extensions -> core.search cycle
+    # importing at runtime would close the extensions -> flaskbb.search cycle
     from flaskbb.utils.database import BaseModel
 
     ModelT = type[BaseModel]
@@ -109,9 +109,9 @@ class SearchBackend(ABC):
         optional to override, so backends that don't need anything
         smarter (or can't) get a correct-enough preview for free.
         """
-        # deferred: flaskbb.core.settings -> ... -> flaskbb.extensions ->
-        # flaskbb.core.search, a circular import at module level.
-        from flaskbb.core.settings import flaskbb_config
+        # deferred: flaskbb.settings -> ... -> flaskbb.extensions ->
+        # flaskbb.search, a circular import at module level.
+        from flaskbb.settings import flaskbb_config
 
         length = flaskbb_config["SEARCH_SNIPPET_LENGTH"]
 

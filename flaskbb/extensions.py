@@ -27,9 +27,9 @@ from flask_wtf.csrf import CSRFProtect
 from sqlalchemy import event, MetaData
 from sqlalchemy.engine import Engine
 
-from flaskbb.core.search import FlaskBBSearch
 from flaskbb.exceptions import AuthorizationRequired
 from flaskbb.plugins.manager import FlaskBBPluginManager
+from flaskbb.search import FlaskBBSearch
 from flaskbb.utils.alembic import Alembic
 
 # PluginManager
@@ -69,7 +69,7 @@ def _enable_sqlite_foreign_keys(dbapi_connection: Any, connection_record: Any) -
 event.listen(Engine, "connect", _enable_sqlite_foreign_keys)
 
 
-# Search backend (pluggable full-text search; see flaskbb/core/search/)
+# Search backend (pluggable full-text search; see flaskbb/search/)
 flaskbb_search = FlaskBBSearch(pluggy)
 
 # Login

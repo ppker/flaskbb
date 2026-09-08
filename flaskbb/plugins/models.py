@@ -9,10 +9,10 @@ from typing import Any
 import sqlalchemy as sa
 from sqlalchemy.orm import Mapped, mapped_column
 
-from flaskbb.core.settings.forms import build_form
-from flaskbb.core.settings.models import display_key, Setting, SettingsDiff
-from flaskbb.core.settings.registry import setting_registry
 from flaskbb.extensions import db, pluggy
+from flaskbb.settings.forms import build_form
+from flaskbb.settings.models import display_key, Setting, SettingsDiff
+from flaskbb.settings.registry import setting_registry
 from flaskbb.utils.database import BaseModel
 
 

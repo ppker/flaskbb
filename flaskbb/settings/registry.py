@@ -1,6 +1,6 @@
 """
-flaskbb.core.settings.registry
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+flaskbb.settings.registry
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Central registry that FlaskBB and plugins register setting groups
 into. Populated via the flaskbb_load_setting_groups pluggy hook.

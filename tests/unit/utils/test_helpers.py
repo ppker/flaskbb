@@ -1,6 +1,7 @@
 import datetime as dt
 
 from flaskbb.forum.models import Forum
+from flaskbb.settings import flaskbb_config
 from flaskbb.utils.helpers import (
     crop_title,
     format_quote,
@@ -10,7 +11,6 @@ from flaskbb.utils.helpers import (
     time_utcnow,
     topic_is_unread,
 )
-from flaskbb.utils.settings import flaskbb_config
 
 
 def test_slugify():

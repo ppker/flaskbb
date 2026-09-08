@@ -1,6 +1,6 @@
 """
-flaskbb.core.search.backends.postgresql
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+flaskbb.search.backends.postgresql
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 A search backend built on PostgreSQL's native full-text search. Each
 searchable table carries a `search_vector` column (`tsvector`, a
@@ -29,10 +29,10 @@ from flask_sqlalchemy.model import Model
 from sqlalchemy import DDL, event, func, inspect, literal_column, Select, select
 from sqlalchemy.dialects.postgresql import TSVECTOR
 
-from flaskbb.core.search.base import ModelT, ordered_by_ids, SearchBackend
-from flaskbb.core.search.spec import INDEX_SPECS, TABLES
 from flaskbb.extensions import db
 from flaskbb.forum.models import Post, Topic
+from flaskbb.search.base import ModelT, ordered_by_ids, SearchBackend
+from flaskbb.search.spec import INDEX_SPECS, TABLES
 
 _SEARCH_LIMIT = 1000
 # The text search configuration used for both indexing (the generated

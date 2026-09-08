@@ -12,12 +12,13 @@ and the user settings from a signed in user.
 import logging
 
 from attrs import define, field
-from flask import Blueprint, flash, Flask, jsonify, redirect, request, url_for
+from flask import Blueprint, flash, jsonify, redirect, request, url_for
 from flask.views import MethodView
 from flask_babelplus import gettext as _
 from flask_login import login_required
 from pluggy import HookimplMarker
 
+from flaskbb.core.app import FlaskBB
 from flaskbb.user.forms import (
     ChangeAvatarForm,
     ChangeEmailForm,
@@ -280,7 +281,7 @@ class UserProfile(MethodView):  # pragma: no cover
 
 
 @impl(tryfirst=True)
-def flaskbb_load_blueprints(app: Flask):
+def flaskbb_load_blueprints(app: FlaskBB):
     user = Blueprint("user", __name__)
     register_view(user, routes=["/settings/email"], view_func=ChangeEmail.as_view("change_email"))
     register_view(user, routes=["/settings/general"], view_func=UserSettings.as_view("settings"))

@@ -1,6 +1,6 @@
 """
-flaskbb.core.search.backends.sqlite
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+flaskbb.search.backends.sqlite
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 A search backend built on SQLite's FTS5 full-text extension. Each
 searchable table gets an external-content FTS5 virtual table (e.g.
@@ -27,10 +27,10 @@ from flask import current_app
 from flask_sqlalchemy.model import Model
 from sqlalchemy import DDL, event, Select, text
 
-from flaskbb.core.search.base import ModelT, ordered_by_ids, SearchBackend
-from flaskbb.core.search.spec import INDEX_SPECS
 from flaskbb.extensions import db
 from flaskbb.forum.models import Topic
+from flaskbb.search.base import ModelT, ordered_by_ids, SearchBackend
+from flaskbb.search.spec import INDEX_SPECS
 
 _SEARCH_LIMIT = 1000
 

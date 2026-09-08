@@ -1,6 +1,6 @@
 """
-flaskbb.core.settings.fixture
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+flaskbb.settings.fixture
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 This modules holds the actual setting definitions (fixtures) for FlaskBB.
 

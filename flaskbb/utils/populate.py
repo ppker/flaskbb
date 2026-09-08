@@ -15,9 +15,9 @@ from typing import Any
 import sqlalchemy as sa
 from alembic.util.exc import CommandError
 
-from flaskbb.core.settings import Setting, setting_registry
 from flaskbb.extensions import alembic, db, pluggy
 from flaskbb.forum.models import Category, Forum, Post, Topic
+from flaskbb.settings import Setting, setting_registry
 from flaskbb.user.models import Group, User
 from flaskbb.utils.database import create_database, database_exists
 

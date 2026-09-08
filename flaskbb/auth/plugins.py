@@ -14,8 +14,8 @@ from flaskbb.utils.proxies import current_user
 
 from ..core.auth.authentication import ForceLogout, PostAuthenticationHandler
 from ..core.auth.registration import RegistrationPostProcessor
-from ..core.settings import flaskbb_config
 from ..extensions import db
+from ..settings import flaskbb_config
 from ..user.models import User
 from . import impl
 from .services.authentication import (

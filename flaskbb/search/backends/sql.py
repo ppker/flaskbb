@@ -1,6 +1,6 @@
 """
-flaskbb.core.search.backends.sql
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+flaskbb.search.backends.sql
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 A dependency-free search backend that searches directly against the
 database via ILIKE. The row is the index, so index/update/remove/
@@ -17,8 +17,8 @@ from flask_sqlalchemy.model import Model
 from sqlalchemy import or_, Select, select
 from sqlalchemy.sql.elements import ColumnElement
 
-from flaskbb.core.search.base import ModelT, SearchBackend
 from flaskbb.forum.models import Forum, Post, Topic
+from flaskbb.search.base import ModelT, SearchBackend
 from flaskbb.user.models import User
 
 

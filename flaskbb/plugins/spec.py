@@ -19,7 +19,6 @@ if t.TYPE_CHECKING:
     from mistune.plugins import PluginRef
 
     from flaskbb.core.auth.registration import UserRegistrationInfo
-    from flaskbb.core.settings.models import SettingsDiff
     from flaskbb.core.user.update import (
         AvatarUpdate,
         EmailUpdate,
@@ -28,6 +27,7 @@ if t.TYPE_CHECKING:
     )
     from flaskbb.forum.models import Post, Topic
     from flaskbb.plugins.manager import FlaskBBPluginManager
+    from flaskbb.settings.models import SettingsDiff
     from flaskbb.user.models import Guest, User
 
 spec = HookspecMarker("flaskbb")
@@ -110,7 +110,7 @@ def flaskbb_additional_setup(app: "Flask", pluggy: "FlaskBBPluginManager"):
 def flaskbb_load_internal_setting_groups():
     """Hook for registering FlaskBB's own built-in setting groups.
 
-    This is internal-only - implemented by flaskbb.core.settings.*_group
+    This is internal-only - implemented by flaskbb.settings.*_group
     modules (general_group, auth_group, misc_group, appearance_group)
     and nothing else. Plugin authors should implement
     flaskbb_load_setting_groups instead (see below); groups loaded
@@ -165,7 +165,7 @@ def flaskbb_load_search_backends():
     """Hook for plugins to register additional search backends.
 
     Implementations should return a `SearchBackendRegistration` (from
-    `flaskbb.core.search`), or a list of them, each mapping a
+    `flaskbb.search`), or a list of them, each mapping a
     `SEARCH_BACKEND` config value to a `SearchBackend` subclass. All
     results across every installed plugin are collected - this hookspec
     does not use firstresult. A name that collides with a built-in

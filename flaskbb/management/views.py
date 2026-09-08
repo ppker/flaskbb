@@ -19,9 +19,7 @@ import sqlalchemy as sa
 from celery import __version__ as celery_version
 from flask import (
     Blueprint,
-    current_app,
     flash,
-    Flask,
     jsonify,
     redirect,
     request,
@@ -36,11 +34,8 @@ from pluggy import HookimplMarker
 from sqlalchemy.orm import joinedload
 from werkzeug.datastructures import FileStorage
 
-from flaskbb import __version__ as flaskbb_version
-from flaskbb.core.settings import flaskbb_config
-from flaskbb.core.settings.forms import build_form
-from flaskbb.core.settings.models import Setting
-from flaskbb.core.settings.registry import setting_registry
+from flaskbb._version import __version__ as flaskbb_version
+from flaskbb.core.app import FlaskBB
 from flaskbb.extensions import allows, celery, db, login_manager
 from flaskbb.forum.forms import UserSearchForm
 from flaskbb.forum.models import Attachment, Category, Forum, Post, Report, Topic
@@ -59,6 +54,10 @@ from flaskbb.management.forms import (
 )
 from flaskbb.plugins.models import PluginRegistry
 from flaskbb.plugins.utils import validate_plugin
+from flaskbb.settings import flaskbb_config
+from flaskbb.settings.forms import build_form
+from flaskbb.settings.models import Setting
+from flaskbb.settings.registry import setting_registry
 from flaskbb.user.models import Group, Guest, User
 from flaskbb.utils.helpers import (
     FlashAndRedirect,
@@ -69,7 +68,7 @@ from flaskbb.utils.helpers import (
     time_diff,
     time_utcnow,
 )
-from flaskbb.utils.proxies import current_user
+from flaskbb.utils.proxies import current_app, current_user
 from flaskbb.utils.requirements import (
     CanBanTargetUser,
     CanBanUser,
@@ -1604,7 +1603,7 @@ class UpgradePlugin(MethodView):
 
 
 @impl(tryfirst=True)
-def flaskbb_load_blueprints(app: Flask):
+def flaskbb_load_blueprints(app: FlaskBB):
     management = Blueprint("management", __name__)
 
     @management.before_request

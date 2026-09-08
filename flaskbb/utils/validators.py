@@ -12,7 +12,6 @@ import functools
 from collections.abc import Callable
 from typing import override, TypeVar
 
-from flask import current_app
 from flask_babelplus import lazy_gettext as _
 from flask_wtf import FlaskForm, RecaptchaField
 from flask_wtf.file import FileAllowed, FileSize
@@ -20,7 +19,8 @@ from wtforms import Field
 from wtforms.form import BaseForm
 
 from flaskbb.extensions import limiter
-from flaskbb.utils.settings import flaskbb_config
+from flaskbb.settings import flaskbb_config
+from flaskbb.utils.proxies import current_app
 
 _F = TypeVar("_F", bound="FlaskForm")
 
@@ -31,7 +31,6 @@ def add_recaptcha_field(
     def decorator(cls: type[_F]) -> Callable[[], _F]:
         @functools.wraps(cls)
         def decorated_class() -> _F:
-            from flaskbb.core.settings import flaskbb_config
             from flaskbb.utils.helpers import enforce_recaptcha
 
             if flaskbb_config["RECAPTCHA_ENABLED"]:
@@ -54,7 +53,7 @@ class AvatarExtensionValidator(FileAllowed):
 
     @override
     def __call__(self, form: BaseForm, field: Field) -> None:
-        self.upload_set = current_app.config.get("AVATAR_EXTENSIONS", [])  # pyright: ignore[reportUnknownMemberType]
+        self.upload_set = current_app.config.get("AVATAR_EXTENSIONS", [])
         return super().__call__(form, field)  # pyright: ignore[reportUnknownMemberType]
 
 

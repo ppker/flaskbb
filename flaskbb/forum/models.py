@@ -43,7 +43,7 @@ if TYPE_CHECKING:
     from flaskbb.user.models import Group, User
 
 from flaskbb.core.exceptions import PersistenceError
-from flaskbb.core.settings import flaskbb_config
+from flaskbb.settings import flaskbb_config
 from flaskbb.utils.database import (
     BaseModel,
     HideableMixin,

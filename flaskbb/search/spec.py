@@ -1,6 +1,6 @@
 """
-flaskbb.core.search.spec
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+flaskbb.search.spec
+~~~~~~~~~~~~~~~~~~~
 
 The searchable-field mapping shared by the database-native search
 backends (`postgresql`, `sqlite`): which columns of which table each
@@ -10,8 +10,8 @@ backend indexes. Nullable columns are coalesced to '' when indexed.
 :license: BSD, see LICENSE for more details.
 """
 
-from flaskbb.core.search.base import ModelT
 from flaskbb.forum.models import Forum, Post, Topic
+from flaskbb.search.base import ModelT
 from flaskbb.user.models import User
 
 # (model, table, indexed columns)

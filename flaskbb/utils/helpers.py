@@ -31,7 +31,6 @@ from babel.dates import format_timedelta as babel_format_timedelta
 from flask import (
     abort,
     Blueprint,
-    current_app,
     flash,
     Flask,
     redirect,
@@ -51,13 +50,13 @@ from werkzeug.local import LocalProxy
 from werkzeug.utils import import_string, ImportStringError
 
 from flaskbb.extensions import babel, redis_store
-from flaskbb.utils.proxies import current_user
+from flaskbb.utils.proxies import current_app, current_user
 
 if TYPE_CHECKING:
     from flaskbb.forum.models import Category, Forum, ForumsRead, Topic, TopicsRead
     from flaskbb.user.models import User
 
-from flaskbb.core.settings import flaskbb_config
+from flaskbb.settings import flaskbb_config
 from flaskbb.utils.http import get_first_safe_redirect_url
 
 logger = logging.getLogger(__name__)
@@ -105,7 +104,7 @@ def redirect_url(endpoint: str | None, use_referrer: bool = True):
     :param endpoint: The trusted fallback URL to redirect to (e.g. built
         with ``url_for``). If not provided 'forum.index' will be used.
     """
-    allowed_hosts: list[str] = current_app.config["ALLOWED_HOSTS"]
+    allowed_hosts = current_app.config["ALLOWED_HOSTS"]
     targets = [request.args.get("next"), request.referrer if use_referrer else None]
     return get_first_safe_redirect_url(
         *targets,

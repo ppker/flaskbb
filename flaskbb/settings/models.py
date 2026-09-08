@@ -1,6 +1,6 @@
 """
-flaskbb.core.settings.models
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+flaskbb.settings.models
+~~~~~~~~~~~~~~~~~~~~~~~
 
 This module contains the Setting model. It owns both storage and caching for
 settings values.

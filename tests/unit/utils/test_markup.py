@@ -1,8 +1,8 @@
 import pytest
 from flask import current_app
 from flask_login import login_user
-from flaskbb.core.settings import flaskbb_config
 from flaskbb.markup import DEFAULT_PLUGINS, FlaskBBRenderer, make_renderer
+from flaskbb.settings import flaskbb_config
 
 markdown = make_renderer([FlaskBBRenderer], DEFAULT_PLUGINS)
 
