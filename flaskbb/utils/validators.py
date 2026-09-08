@@ -16,7 +16,8 @@ from flask import current_app
 from flask_babelplus import lazy_gettext as _
 from flask_wtf import FlaskForm, RecaptchaField
 from flask_wtf.file import FileAllowed, FileSize
-from wtforms import Field, Form
+from wtforms import Field
+from wtforms.form import BaseForm
 
 from flaskbb.extensions import limiter
 from flaskbb.utils.settings import flaskbb_config
@@ -52,17 +53,17 @@ class AvatarExtensionValidator(FileAllowed):
         super().__init__(upload_set=[], message=message)  # pyright: ignore[reportUnknownMemberType]
 
     @override
-    def __call__(self, form: Form, field: Field) -> None:
+    def __call__(self, form: BaseForm, field: Field) -> None:
         self.upload_set = current_app.config.get("AVATAR_EXTENSIONS", [])  # pyright: ignore[reportUnknownMemberType]
         return super().__call__(form, field)  # pyright: ignore[reportUnknownMemberType]
 
 
 class AvatarSizeValidator(FileSize):
     def __init__(self, message: str | None = None):
-        super().__init__(max_size=None, min_size=0, message=message)  # pyright: ignore[reportUnknownMemberType]
+        super().__init__(max_size=0, min_size=0, message=message)  # pyright: ignore[reportUnknownMemberType]
 
     @override
-    def __call__(self, form: Form, field: Field) -> None:
+    def __call__(self, form: BaseForm, field: Field) -> None:
         self.max_size = flaskbb_config["AVATAR_SIZE"] * 1024
         self.min_size = 0
         if not self.message:

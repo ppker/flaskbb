@@ -779,19 +779,19 @@ def real[T](obj: LocalProxy[T]) -> "User": ...
 def real[T](obj: T) -> T: ...
 
 
-def real(obj):
+def real(obj: Any) -> Any:
     """Unwraps a werkzeug.local.LocalProxy object if given one,
     else returns the object.
     """
     if isinstance(obj, LocalProxy):
-        return obj._get_current_object()
+        return obj._get_current_object()  # pyright: ignore[reportPrivateUsage]
     return obj
 
 
 def anonymous_required(f: Any):
     @wraps(f)
     def wrapper(*a: Any, **k: Any):
-        if current_user is not None and current_user.is_authenticated:
+        if current_user is not None and current_user.is_authenticated:  # pyright: ignore[reportUnnecessaryComparison]
             return redirect_or_next(url_for("forum.index"))
         return f(*a, **k)
 

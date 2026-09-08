@@ -22,14 +22,14 @@ from typing import Any, TYPE_CHECKING
 from flask import Flask
 from flask_sqlalchemy.model import Model
 from markupsafe import escape, Markup
-from sqlalchemy import case, Select, select
+from sqlalchemy import case, inspect, Select, select
 from sqlalchemy import false as sql_false
 
 if TYPE_CHECKING:
     # importing at runtime would close the extensions -> core.search cycle
-    from flaskbb.utils.database import CRUDMixin
+    from flaskbb.utils.database import BaseModel
 
-    ModelT = type[CRUDMixin]
+    ModelT = type[BaseModel]
 else:
     ModelT = type[Model]
 
@@ -40,7 +40,7 @@ def ordered_by_ids(model: ModelT, ids: Sequence[int]) -> Select[Any]:
     from `search()` once it has resolved a ranked list of primary keys.
     An empty `ids` yields a statement that matches nothing.
     """
-    pk_col = model.id
+    pk_col = inspect(model).primary_key[0]
     if not ids:
         return select(model).where(sql_false())
     ordering = case({pk: rank for rank, pk in enumerate(ids)}, value=pk_col)

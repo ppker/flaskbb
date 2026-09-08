@@ -96,15 +96,15 @@ Database Setup
 Point ``SQLALCHEMY_DATABASE_URI`` in your generated config at the database
 you want to use before continuing.
 
-**MySQL users:** Make sure that you create the database using the ``utf8``
+**MySQL users:** Make sure that you create the database using the ``utf8mb4``
 charset::
 
-    CREATE DATABASE flaskbb CHARACTER SET utf8;
+    CREATE DATABASE flaskbb CHARACTER SET utf8mb4;
 
-Even though the ``utf8mb4`` charset is prefered today
-(see `this <https://dba.stackexchange.com/a/152383>`_ SO answer), we have to
-create our database using the ``utf8`` charset. A good explanation about
-this issue can be found `here <https://stackoverflow.com/a/31474509>`_.
+``utf8`` (an alias for ``utf8mb3``) cannot store emoji, which FlaskBB writes
+directly into posts. ``utf8mb4`` requires the ``DYNAMIC`` row format, the
+default since MySQL 5.7.7 and MariaDB 10.2.2 - on older servers the 767 byte
+index prefix limit is too small for FlaskBB's unique ``VARCHAR(255)`` indexes.
 
 For a guided install, which creates the database tables, default groups,
 and your admin user, run::

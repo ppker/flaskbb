@@ -21,15 +21,15 @@ class Alembic(FlaskAlembic):
             return cache.config
 
         cache.config = c = Config()
-        script_location = current_app.config["ALEMBIC"]["script_location"]
+        script_location = t.cast(str, current_app.config["ALEMBIC"]["script_location"])
 
         if not os.path.isabs(script_location) and ":" not in script_location:
             script_location = os.path.join(current_app.root_path, script_location)
 
-        version_locations = [script_location]
+        version_locations: list[str] = [script_location]
 
         for item in current_app.config["ALEMBIC"]["version_locations"]:
-            version_location = item if isinstance(item, str) else item[1]
+            version_location = t.cast(str, item if isinstance(item, str) else item[1])
 
             if not os.path.isabs(version_location) and ":" not in version_location:
                 version_location = os.path.join(current_app.root_path, version_location)
@@ -38,7 +38,8 @@ class Alembic(FlaskAlembic):
 
         c.set_main_option("script_location", script_location)
         c.set_main_option("path_separator", current_app.config["ALEMBIC"]["path_separator"])
-        path_sep = self._get_file_separator_char(c)
+        # path_separator is always set above, so this is never None
+        path_sep = t.cast(str, c._get_file_separator_char("path_separator"))
         c.set_main_option(
             "version_locations",
             path_sep.join(version_locations),
@@ -59,18 +60,3 @@ class Alembic(FlaskAlembic):
             c.set_main_option("databases", ", ".join(self.metadatas))
 
         return cache.config
-
-    def _get_file_separator_char(self, config: Config) -> str:
-        if hasattr(config, "_get_file_separator_char"):
-            # Alembic >= 1.16.0
-            # path_separator is always set above, so this is never None
-            return t.cast(str, config._get_file_separator_char("path_separator"))
-
-        join_on_path = {
-            "space": " ",
-            "newline": "\n",
-            "os": os.pathsep,
-            ":": ":",
-            ";": ";",
-        }
-        return join_on_path.get(current_app.config["ALEMBIC"].get("version_path_separator"), ",")

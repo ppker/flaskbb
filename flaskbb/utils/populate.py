@@ -14,15 +14,12 @@ from typing import Any
 
 import sqlalchemy as sa
 from alembic.util.exc import CommandError
-from sqlalchemy_utils.functions import (
-    create_database,  # pyright: ignore[reportPrivateLocalImportUsage, reportUnknownVariableType]
-    database_exists,  # pyright: ignore[reportPrivateLocalImportUsage, reportUnknownVariableType]
-)
 
 from flaskbb.core.settings import Setting, setting_registry
 from flaskbb.extensions import alembic, db, pluggy
 from flaskbb.forum.models import Category, Forum, Post, Topic
 from flaskbb.user.models import Group, User
+from flaskbb.utils.database import create_database, database_exists
 
 logger = logging.getLogger(__name__)
 

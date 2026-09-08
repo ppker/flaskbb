@@ -17,7 +17,7 @@ import warnings
 from collections.abc import Callable, Sequence
 from datetime import datetime, UTC
 from types import ModuleType
-from typing import Any
+from typing import Any, cast
 
 import sqlalchemy as sa
 from celery import Celery
@@ -25,11 +25,14 @@ from flask import flash, Flask, redirect, request, url_for
 from flask_babelplus import gettext as _
 from jinja2.filters import do_filesizeformat
 from sqlalchemy import event
-from sqlalchemy.engine import Engine
+from sqlalchemy.engine import Connection, Engine
 from sqlalchemy.exc import OperationalError, ProgrammingError
+from werkzeug.exceptions import Forbidden, InternalServerError, NotFound, RequestEntityTooLarge
 
 from flaskbb.core.settings import (
-    fixture,  # noqa: F401
+    fixture as fixture,
+)
+from flaskbb.core.settings import (
     flaskbb_config,
     setting_registry,
 )
@@ -95,16 +98,16 @@ from flaskbb.utils.requirements import (
 from flaskbb.utils.translations import FlaskBBDomain
 from flaskbb.utils.uploads import create_upload_directory
 
-from . import markup  # noqa
-from .auth import views as auth_views  # noqa
+from . import markup  # noqa  # pyright: ignore[reportUnusedImport]
+from .auth import views as auth_views  # noqa  # pyright: ignore[reportUnusedImport]
 from .deprecation import FlaskBBDeprecation
 from .display.navigation import NavigationContentType
-from .forum import views as forum_views  # noqa
-from .management import views as management_views  # noqa
+from .forum import views as forum_views  # noqa  # pyright: ignore[reportUnusedImport]
+from .management import views as management_views  # noqa  # pyright: ignore[reportUnusedImport]
 from .management.navigation import get_management_navigation
-from .search import views as search_views  # noqa
-from .upload import views as upload_views  # noqa
-from .user import views as user_views  # noqa
+from .search import views as search_views  # noqa  # pyright: ignore[reportUnusedImport]
+from .upload import views as upload_views  # noqa  # pyright: ignore[reportUnusedImport]
+from .user import views as user_views  # noqa  # pyright: ignore[reportUnusedImport]
 
 logger = logging.getLogger(__name__)
 
@@ -420,19 +423,19 @@ def configure_errorhandlers(app: Flask):
     """Configures the error handlers."""
 
     @app.errorhandler(403)
-    def forbidden_page(error):  # pyright: ignore[reportUnusedFunction]
+    def forbidden_page(error: Forbidden):  # pyright: ignore[reportUnusedFunction]
         return render_template("errors/forbidden_page.html"), 403
 
     @app.errorhandler(404)
-    def page_not_found(error):  # pyright: ignore[reportUnusedFunction]
+    def page_not_found(error: NotFound):  # pyright: ignore[reportUnusedFunction]
         return render_template("errors/page_not_found.html"), 404
 
     @app.errorhandler(500)
-    def server_error_page(error):  # pyright: ignore[reportUnusedFunction]
+    def server_error_page(error: InternalServerError):  # pyright: ignore[reportUnusedFunction]
         return render_template("errors/server_error.html"), 500
 
     @app.errorhandler(413)
-    def request_entity_too_large(error):  # pyright: ignore[reportUnusedFunction]
+    def request_entity_too_large(error: RequestEntityTooLarge):  # pyright: ignore[reportUnusedFunction]
         max_content_length = app.config.get("MAX_CONTENT_LENGTH")
         if max_content_length:
             message = _(
@@ -464,7 +467,7 @@ def configure_translations(app: Flask):
     babel.init_app(app=app, default_domain=FlaskBBDomain(app))
 
     @babel.localeselector
-    def get_locale():
+    def get_locale():  # pyright: ignore[reportUnusedFunction]
         # if a user is logged in, use the locale from the user settings
         if current_user and current_user.is_authenticated and current_user.language:
             return current_user.language
@@ -483,11 +486,25 @@ def configure_logging(app: Flask):
     if app.config["SQLALCHEMY_ECHO"]:
         # Ref: http://stackoverflow.com/a/8428546
         @event.listens_for(Engine, "before_cursor_execute")
-        def before_cursor_execute(conn, cursor, statement, parameters, context, executemany):
+        def before_cursor_execute(  # pyright: ignore[reportUnusedFunction]
+            conn: Connection,
+            cursor: Any,
+            statement: str,
+            parameters: Any,
+            context: Any,
+            executemany: bool,
+        ) -> None:
             conn.info.setdefault("query_start_time", []).append(time.time())
 
         @event.listens_for(Engine, "after_cursor_execute")
-        def after_cursor_execute(conn, cursor, statement, parameters, context, executemany):
+        def after_cursor_execute(  # pyright: ignore[reportUnusedFunction]
+            conn: Connection,
+            cursor: Any,
+            statement: str,
+            parameters: Any,
+            context: Any,
+            executemany: bool,
+        ) -> None:
             total = time.time() - conn.info["query_start_time"].pop(-1)
             app.logger.debug("Total Time: %f", total)
 

@@ -963,7 +963,7 @@ class MarkRead(MethodView):
         db.session.execute(sa.delete(TopicsRead).where(TopicsRead.user_id == real(current_user).id))
 
         forums = db.session.execute(sa.select(Forum)).scalars()
-        forumsread_list = []
+        forumsread_list: list[ForumsRead] = []
         for forum_instance in forums:
             forumsread = ForumsRead()
             forumsread.user = real(current_user)

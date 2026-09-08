@@ -13,6 +13,6 @@ __version__ = "2.2.1"
 
 import logging
 
-logger = logging.getLogger(__name__)
+from flaskbb.app import create_app as create_app
 
-from flaskbb.app import create_app  # noqa
+logger = logging.getLogger(__name__)

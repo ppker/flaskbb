@@ -26,7 +26,7 @@ from typing import Any, override
 
 from flask import current_app
 from flask_sqlalchemy.model import Model
-from sqlalchemy import DDL, event, func, literal_column, Select, select
+from sqlalchemy import DDL, event, func, inspect, literal_column, Select, select
 from sqlalchemy.dialects.postgresql import TSVECTOR
 
 from flaskbb.core.search.base import ModelT, ordered_by_ids, SearchBackend
@@ -107,7 +107,7 @@ class PostgreSQLSearchBackend(SearchBackend):
     def _ranked_ids(self, model: ModelT, table: str, query: str) -> list[int]:
         vector = _search_vector(table)
         tsquery = func.plainto_tsquery(_TS_CONFIG, query)
-        pk_col = model.id
+        pk_col = inspect(model).primary_key[0]
         stmt = (
             select(pk_col)
             .where(vector.op("@@")(tsquery))

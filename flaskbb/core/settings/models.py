@@ -20,7 +20,8 @@ from typing import Any
 import sqlalchemy as sa
 from sqlalchemy.orm import Mapped, mapped_column
 
-from flaskbb.extensions import BaseModel, cache, db
+from flaskbb.extensions import cache, db
+from flaskbb.utils.database import BaseModel
 
 from .definitions import SettingDefinition
 from .registry import setting_registry

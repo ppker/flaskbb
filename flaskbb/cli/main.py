@@ -20,7 +20,6 @@ import click
 from flask import current_app
 from flask.cli import FlaskGroup, ScriptInfo, with_appcontext
 from jinja2 import Environment, FileSystemLoader
-from sqlalchemy_utils.functions import database_exists
 
 from flaskbb.app import create_app
 from flaskbb.cli.utils import (
@@ -31,7 +30,7 @@ from flaskbb.cli.utils import (
     write_config,
 )
 from flaskbb.extensions import celery, db, flaskbb_search, pluggy
-from flaskbb.utils.database import drop_all
+from flaskbb.utils.database import database_exists, drop_all
 from flaskbb.utils.populate import (
     create_default_groups,
     create_default_settings,

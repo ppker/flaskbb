@@ -24,6 +24,7 @@ from flask_login import (
     login_user,
     logout_user,
 )
+from werkzeug.exceptions import TooManyRequests
 
 from flaskbb.auth.forms import (
     AccountActivationForm,
@@ -432,7 +433,9 @@ def flaskbb_load_blueprints(app: Flask):
         # return limiter.check()
 
     @auth.errorhandler(429)
-    def login_rate_limit_error(error):  # pyright: ignore[reportUnusedFunction]
+    def login_rate_limit_error(  # pyright: ignore[reportUnusedFunction]
+        error: TooManyRequests,
+    ) -> tuple[str, int]:
         """Register a custom error handler for a 'Too Many Requests'
         (HTTP CODE 429) error."""
         return (

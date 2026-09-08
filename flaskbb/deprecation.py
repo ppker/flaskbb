@@ -60,8 +60,8 @@ def deprecated(message: str = "", category: type[FlaskBBDeprecation] = RemovedIn
     """
 
     def deprecation_decorator(f: Callable[..., None]):
-        if not issubclass(category, FlaskBBDeprecation):
-            raise ValueError(
+        if not issubclass(category, FlaskBBDeprecation):  # pyright: ignore[reportUnnecessaryIsInstance]
+            raise ValueError(  # pyright: ignore[reportUnreachable]
                 f"Expected subclass of FlaskBBDeprecation for category, got {str(category)}"
             )
 

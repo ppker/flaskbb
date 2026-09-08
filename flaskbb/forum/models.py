@@ -36,7 +36,7 @@ from sqlalchemy.orm import (
     Session,
 )
 
-from flaskbb.extensions import BaseModel, db, pluggy
+from flaskbb.extensions import db, pluggy
 from flaskbb.utils.queries import hidden, paginate
 
 if TYPE_CHECKING:
@@ -45,8 +45,8 @@ if TYPE_CHECKING:
 from flaskbb.core.exceptions import PersistenceError
 from flaskbb.core.settings import flaskbb_config
 from flaskbb.utils.database import (
-    CRUDMixin,
-    HideableCRUDMixin,
+    BaseModel,
+    HideableMixin,
     make_comparable,
     UTCDateTime,
 )
@@ -116,7 +116,7 @@ forumgroups = Table(
 )
 
 
-class TopicsRead(BaseModel, CRUDMixin):
+class TopicsRead(BaseModel):
     __tablename__ = "topicsread"
 
     user_id: Mapped[int] = mapped_column(
@@ -136,7 +136,7 @@ class TopicsRead(BaseModel, CRUDMixin):
     )
 
 
-class ForumsRead(BaseModel, CRUDMixin):
+class ForumsRead(BaseModel):
     __tablename__ = "forumsread"
 
     user_id: Mapped[int] = mapped_column(
@@ -163,7 +163,7 @@ class ForumsRead(BaseModel, CRUDMixin):
 
 
 @make_comparable
-class Report(BaseModel, CRUDMixin):
+class Report(BaseModel):
     __tablename__ = "reports"
 
     # TODO: Store in addition to the info below topic title and username
@@ -212,7 +212,7 @@ class Report(BaseModel, CRUDMixin):
 
 
 @make_comparable
-class Attachment(BaseModel, CRUDMixin):
+class Attachment(BaseModel):
     __tablename__ = "attachments"
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -302,7 +302,7 @@ def _discard_pending_unlinks(session: Session) -> None:  # pyright: ignore[repor
 
 
 @make_comparable
-class Post(HideableCRUDMixin, BaseModel):
+class Post(HideableMixin, BaseModel):
     __tablename__ = "posts"
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -610,7 +610,7 @@ class Post(HideableCRUDMixin, BaseModel):
 
 
 @make_comparable
-class Topic(HideableCRUDMixin, BaseModel):
+class Topic(HideableMixin, BaseModel):
     __tablename__ = "topics"
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -1152,7 +1152,7 @@ class Topic(HideableCRUDMixin, BaseModel):
 
 
 @make_comparable
-class Forum(BaseModel, CRUDMixin):
+class Forum(BaseModel):
     __tablename__ = "forums"
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -1607,7 +1607,7 @@ class Forum(BaseModel, CRUDMixin):
 
 
 @make_comparable
-class Category(BaseModel, CRUDMixin):
+class Category(BaseModel):
     __tablename__ = "categories"
 
     id: Mapped[int] = mapped_column(primary_key=True)

@@ -78,7 +78,7 @@ class SearchForm(FlaskForm):
 
     submit = SubmitField(_("Search"))
 
-    def __init__(self, *args, user: User | None = None, **kwargs):
+    def __init__(self, *args: Any, user: User | None = None, **kwargs: Any):
         self.user = real(user) if user is not None else real(current_user)
         super().__init__(*args, **kwargs)
 
