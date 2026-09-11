@@ -1124,14 +1124,14 @@ def flaskbb_tpl_profile_settings_menu(user: "User | Guest"):
 
 
 @spec
-def flaskbb_tpl_profile_sidebar_links(user: "User"):
+def flaskbb_tpl_profile_links(user: "User"):
     """
     This hook is emitted on the user profile page in order to populate the
     sidebar menu. Implementations of this hook should return an iterable of
     :class:`~flaskbb.display.navigation.NavigationItem` instances::
 
         @impl
-        def flaskbb_tpl_profile_sidebar_links(user):
+        def flaskbb_tpl_profile_links(user):
             return [
                 NavigationLink(
                     endpoint="user.profile",
@@ -1223,7 +1223,7 @@ def flaskbb_tpl_admin_settings_sidebar(user: "User | Guest"):
 
 
 @spec
-def flaskbb_tpl_profile_sidebar_stats(user: "User"):
+def flaskbb_tpl_profile_stats(user: "User"):
     """This hook is emitted on the users profile page below the standard
     information. For example, it can be used to add additional items
     such as a link to the profile.

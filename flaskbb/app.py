@@ -551,7 +551,9 @@ def load_plugins(app: FlaskBB):
     # we are not interested in duplicated plugins or invalid ones
     # ('None' - appears on py2) and thus using a set
     flaskbb_modules = set(
-        module for name, module in sys.modules.items() if name.startswith("flaskbb")
+        module
+        for name, module in sys.modules.items()
+        if name == "flaskbb" or name.startswith("flaskbb.")
     )
     for module in flaskbb_modules:
         pluggy.register(module, internal=True)
